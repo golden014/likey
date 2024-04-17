@@ -1,0 +1,27 @@
+{
+  "canisters": {
+    "likey_backend": {
+      "candid": "src/likey_backend/likey_backend.did",
+      "package": "likey_backend",
+      "type": "rust"
+    },
+    "likey_frontend": {
+      "dependencies": [
+        "likey_backend"
+      ],
+      "source": [
+        "src/likey_frontend/dist"
+      ],
+      "type": "assets",
+      "workspace": "likey_frontend"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "output_env_file": ".env",
+  "version": 1
+}
