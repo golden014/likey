@@ -5,7 +5,7 @@ import React, { ChangeEvent } from 'react'
 const EmailAndPass = ({ onChanges, goNext } : {onChanges: (fieldName: string, value: string) => void, goNext: () => void}) => {
 
     const handleChange = (event : ChangeEvent<HTMLInputElement>) => {
-        const { name, value} = event.target
+        const {name, value} = event.target
         onChanges(name, value)
     }
 

@@ -3,6 +3,9 @@ import React from 'react'
 import EmailAndPass from './email_and_pass'
 import { RegisterDataType } from '../model'
 import PhotoUpload from './photo'
+import Biodata from './biodoata'
+import InterestPage from './interest'
+import { SPORTS } from '@/app/data'
 
 const RegisterPage = () => {
 
@@ -22,6 +25,10 @@ const RegisterPage = () => {
         setRegisterData(prevData => ({
             ...prevData, [fieldName] : value
           }))
+    }
+
+    const handleHobby = (name : string) => {
+
     }
 
     const nextPage = () => {
@@ -45,6 +52,16 @@ const RegisterPage = () => {
         else if(page == 2){
             return(
                 <PhotoUpload goNext={nextPage}/>
+            )
+        }
+        else if(page == 3){
+            return(
+                <Biodata onChanges={handleChanges} goNext={nextPage}/>
+            )
+        }
+        else if(page == 4){
+            return(
+                <InterestPage onChanges={handleHobby} goNext={nextPage} name='Sports' list={SPORTS}/>
             )
         }
         return(
