@@ -21,10 +21,6 @@ const Navbar = ({pageName, handleChange} : {pageName : string, handleChange : (p
         payment : pageName == "Payment" ? "bg-main" : "bg-background",
         setting : pageName == "Setting" ? "bg-main" : "bg-background",
     }
-    
-    const changePage = (pageName : string) => {
-        handleChange(pageName)
-    }
 
     const defaultTailwind = "w-icon_width h-icon_height bg-border_placeholder flex justify-center items-center rounded-full text-white hover:cursor-pointer"
 
