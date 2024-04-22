@@ -27,10 +27,15 @@ const config: Config = {
       },
       height: {
         auth_form_input : "80px",
-        photo_form_input : "222px"
+        photo_form_input : "222px",
+        icon_height : "75px",
+        fit_screen : "95%"
       },
       width: {
-        photo_form_input : "222px"
+        photo_form_input : "222px",
+        navbar_width : "7%",
+        icon_width : "75px",
+        page_width : "90%"
       },
       borderRadius: {
         default: "25px"

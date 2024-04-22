@@ -3,7 +3,10 @@ export interface RegisterDataType{
     password : string,
     first_name : string,
     last_name : string,
-    gender : string,
     height : number,
-    education : number
+    gender : string,
+    education : number,
+    religion : string,
+    description : string,
+    hobbies : string[]
 }
