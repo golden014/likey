@@ -28,13 +28,15 @@ const config: Config = {
       height: {
         auth_form_input : "80px",
         photo_form_input : "222px",
-        icon_height : "75px",
-        fit_screen : "95%"
+        icon_height : "65px",
+        fit_screen : "95%",
+        picture_screen : "90%",
+        interact_button_height : "40px"
       },
       width: {
         photo_form_input : "222px",
         navbar_width : "7%",
-        icon_width : "75px",
+        icon_width : "65px",
         page_width : "90%"
       },
       borderRadius: {
