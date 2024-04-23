@@ -87,6 +87,17 @@ struct UserPayload {
     filter_access: bool
 }
 
+#[derive(candid::CandidType, Serialize, Deserialize, Default)]
+struct UserProfilePayload {
+    first_name: String,
+    last_name: String,
+    height: i32,
+    education: i32,
+    religion: String,
+    description: String,
+    profile_picture_link: String
+}
+
 #[derive(candid::CandidType, Deserialize, Serialize)]
 enum Error {
     NotFound { msg: String },
@@ -187,5 +198,37 @@ fn _get_user(id: &u64) -> Option<User> {
     USER_STORAGE.with(|service| service.borrow().get(id))
 }
 
+#[ic_cdk::query]
+fn get_user(id: u64) -> Result<User, Error> {
+    match _get_user(&id) {
+        Some(user) => Ok(user),
+        None => Err(Error::NotFound {
+            msg: format!("a user with id={} not found", id),
+        }),
+    }
+}
+
+#[ic_cdk::update]
+fn update_user(id: u64, data: UserProfilePayload) -> Result<User, Error> {
+    match USER_STORAGE.with(|service| service.borrow().get(&id)) {
+        Some(mut u) => {
+            u.first_name= data.first_name;
+            u.last_name= data.last_name;
+            u.height= data.height;
+            u.education= data.education;
+            u.religion= data.religion;
+            u.description= data.description;
+            u.profile_picture_link= data.profile_picture_link;
+            do_insert_user(&u);
+            Ok(u)
+        }
+        None => Err(Error::NotFound {
+            msg: format!(
+                "couldn't update user with id={}. user not found",
+                id
+            ),
+        }),
+    }
+}
 
 ic_cdk::export_candid!();
