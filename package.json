@@ -5,11 +5,12 @@
   },
   "name": "likey",
   "scripts": {
-    "build": "npm run build --workspaces --if-present",
-    "prebuild": "npm run prebuild --workspaces --if-present",
-    "pretest": "npm run prebuild --workspaces --if-present",
-    "start": "npm start --workspaces --if-present",
-    "test": "npm test --workspaces --if-present"
+    "generate": "./did.sh && dfx generate",
+    "gen-deploy": "./did.sh && dfx generate && dfx deploy -y",
+    "dev": "next dev ./src/likey_frontend",
+    "build": "next build ./src/likey_frontend",
+    "start": "next start ./src/likey_frontend",
+    "lint": "next lint ./src/likey_frontend"
   },
   "type": "module",
   "workspaces": [

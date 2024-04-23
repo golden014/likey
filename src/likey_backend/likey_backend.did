@@ -1,3 +1,39 @@
-service : {
-    "greet": (text) -> (text) query;
-}
+type Error = variant {
+  NotFound : record { msg : text };
+  InvalidPayloadData : record { msg : text };
+};
+type Result = variant { Ok : opt User; Err : Error };
+type User = record {
+  height : int32;
+  profile_picture_link : text;
+  user_email : text;
+  current_swipe : int32;
+  likey_coin : int32;
+  education : int32;
+  description : text;
+  filter_access : bool;
+  user_id : nat64;
+  user_password : text;
+  gender : text;
+  first_name : text;
+  last_name : text;
+  religion : text;
+  photo_link : vec text;
+};
+type UserPayload = record {
+  height : int32;
+  profile_picture_link : text;
+  user_email : text;
+  current_swipe : int32;
+  likey_coin : int32;
+  education : int32;
+  description : text;
+  filter_access : bool;
+  user_password : text;
+  gender : text;
+  first_name : text;
+  last_name : text;
+  religion : text;
+  photo_link : vec text;
+};
+service : { create_user : (UserPayload) -> (Result) }

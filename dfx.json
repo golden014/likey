@@ -10,7 +10,7 @@
         "likey_backend"
       ],
       "source": [
-        "src/likey_frontend/dist"
+        "src/likey_frontend/out"
       ],
       "type": "assets",
       "workspace": "likey_frontend"

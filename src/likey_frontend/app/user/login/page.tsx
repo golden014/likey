@@ -35,7 +35,7 @@ const LoginPage = () =>{
                     <button className='w-full h-full bg-main rounded-default shadow-xl'>Login</button>
                 </div>
                 <div className='mt-6 text-text'>
-                    Don't have an account?
+                    Don{"'"}t have an account?
                     <a href={"/user/register"} className='ml-1'>
                         <span className='text-boy'>Join</span> 
                         <span className='text-girl mx-1'>Likey</span> 
