@@ -22,6 +22,7 @@ type IdCell = Cell<u64, Memory>;
 #[derive(candid::CandidType, Clone, Serialize, Deserialize, Default)]
 struct User {
     user_id: u64,
+    user_principal_id: String,
     user_email: String,
     user_password: String,
     first_name: String,
@@ -71,6 +72,7 @@ thread_local! {
 
 #[derive(candid::CandidType, Serialize, Deserialize, Default)]
 struct UserPayload {
+    user_principal_id: String,
     user_email: String,
     user_password: String,
     first_name: String,
@@ -145,6 +147,7 @@ fn create_user(data: UserPayload) -> Result<Option<User>, Error> {
 
     let new_user = User {
         user_id: id,
+        user_principal_id: data.user_principal_id,
         user_email: data.user_email,
         user_password: hash,
         first_name: data.first_name,
@@ -197,6 +200,35 @@ fn do_insert_user(data: &User) -> bool {
 fn _get_user(id: &u64) -> Option<User> {
     USER_STORAGE.with(|service| service.borrow().get(id))
 }
+
+fn _get_user_by_principal_id(principal_id:String) -> Vec<User> {
+    USER_STORAGE.with(|us| {
+        us
+        .borrow()
+        .iter()
+        .filter_map(|(_,user)| {
+            if user.user_principal_id == *principal_id {
+                Some(user.clone())
+            } else{
+                None
+            }
+        }).collect()
+    })
+}
+
+#[ic_cdk::query]
+fn get_user_by_principal_id(principal_id:String) -> Result<User, Error> {
+    let a = _get_user_by_principal_id(principal_id);
+    if a.len() == 0{
+        return  Err(Error::NotFound {
+            msg: format!("not found"),
+        })
+    }
+    else {
+        return Ok(a.first().unwrap().clone())
+    }
+}
+
 
 //Greet
 #[ic_cdk::query]
