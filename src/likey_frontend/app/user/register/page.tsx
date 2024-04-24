@@ -4,8 +4,9 @@ import EmailAndPass from './email_and_pass'
 import { RegisterDataType } from '../model'
 import PhotoUpload from './photo'
 import Biodata from './biodoata'
-import InterestPage from './interest'
-import { SPORTS } from '@/app/data'
+import InterestPage from './hobby'
+import { MUSIC_GENRES, OTHERS_HOBBIES, SPORTS } from '@/app/data'
+import { NextResponse } from 'next/server'
 
 
 const RegisterPage = () => {
@@ -15,9 +16,12 @@ const RegisterPage = () => {
         password : "",
         first_name : "",
         last_name : "",
-        gender : "",
-        height : 0,
-        education : 0
+        height : 120,
+        gender : "Male",
+        education : 0,
+        religion : "",
+        description : "",
+        hobbies: []
     })
 
     const [page, setPage] = React.useState(1)
@@ -29,7 +33,24 @@ const RegisterPage = () => {
     }
 
     const handleHobby = (name : string) => {
+        const arrayOfHobbies = registerData.hobbies
 
+        const index = arrayOfHobbies.indexOf(name)
+
+        console.log("hobby");
+        
+
+        if(index !== -1){
+            console.log("remove hobby");
+            
+            arrayOfHobbies.splice(index, 1)
+        }
+        else{
+            console.log("added hobby");
+            
+            arrayOfHobbies.push(name)
+        }
+        
     }
 
     const nextPage = () => {
@@ -41,6 +62,10 @@ const RegisterPage = () => {
     }
 
     const debug = () => {
+        console.log(registerData)
+    }
+
+    const register = () => {
         console.log(registerData)
     }
 
@@ -65,11 +90,24 @@ const RegisterPage = () => {
                 <InterestPage onChanges={handleHobby} goNext={nextPage} name='Sports' list={SPORTS}/>
             )
         }
-        return(
-            <div>
-                loh
-            </div>
-        )
+        else if(page == 5){
+            return(
+                <InterestPage onChanges={handleHobby} goNext={nextPage} name='Music Genres' list={MUSIC_GENRES}/>
+            )
+        }
+        else if(page == 6){
+            return(
+                <InterestPage onChanges={handleHobby} goNext={nextPage} name='Other Hobbies' list={OTHERS_HOBBIES}/>
+            )
+        }
+        else{
+            register()
+            return(
+                <div>
+                    Hehe
+                </div>
+            )
+        }
     }
 
     return (

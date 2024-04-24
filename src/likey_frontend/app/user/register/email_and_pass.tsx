@@ -29,7 +29,7 @@ const EmailAndPass = ({ onChanges, goNext } : {onChanges: (fieldName: string, va
                 </div>
                 {/* Password */}
                 <div className='w-4/5 h-auth_form_input my-6'>
-                    <input onChange={handleChange} placeholder='Password' name='password' className='w-full h-full p-6 rounded-default border border-border_placeholder bg-background shadow-xl'></input>
+                    <input onChange={handleChange} placeholder='Password' name='password' type='password' className='w-full h-full p-6 rounded-default border border-border_placeholder bg-background shadow-xl'></input>
                 </div>
                 {/* Join Button */}
                 <div className='w-4/5 h-auth_form_input'>
