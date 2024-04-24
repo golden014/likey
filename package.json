@@ -17,6 +17,7 @@
     "src/likey_frontend"
   ],
   "dependencies": {
-    "@dfinity/agent": "^1.2.0"
+    "@dfinity/agent": "^1.2.0",
+    "@dfinity/auth-client": "^1.2.0"
   }
 }
