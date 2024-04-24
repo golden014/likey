@@ -1,5 +1,6 @@
 import { faComment, faCompass, faDollar, faGear, faHeart, faRightFromBracket, faUser } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import Link from 'next/link'
 import React from 'react'
 
 interface Page{
@@ -11,7 +12,7 @@ interface Page{
     setting : string
 }
 
-const Navbar = ({pageName, handleChange} : {pageName : string, handleChange : (pathName : string) => void}) => {
+const Navbar = ({pageName} : {pageName : string}) => {
 
     const color : Page = {
         profile : pageName == "Profile" ? "bg-main" : "bg-background",
@@ -28,42 +29,30 @@ const Navbar = ({pageName, handleChange} : {pageName : string, handleChange : (p
         <div className='h-fit_screen bg-background border-3 border-border_placeholder rounded-default w-navbar_width flex flex-col justify-between'>
             {/* Top Part */}
             <div className='w-full flex items-center justify-center p-6 flex-col gap-4'>
-                <div className={`${defaultTailwind} ${color.profile}`} onClick={() => {
-                    handleChange("Profile")
-                    }}>
+                <Link href={"/profile"} className={`${defaultTailwind} ${color.profile}`}>
                     <FontAwesomeIcon icon={faUser} className='w-3/5 h-3/5'/>
-                </div>
-                <div className={`${defaultTailwind} ${color.explore}`} onClick={() => {
-                    handleChange("Explore")
-                    }}>
+                </Link>
+                <Link href={"/explore"} className={`${defaultTailwind} ${color.explore}`}>
                     <FontAwesomeIcon icon={faCompass} className='w-3/5 h-3/5' color='white'/>
-                </div>
-                <div className={`${defaultTailwind} ${color.chat}`} onClick={() => {
-                    handleChange("Chat")
-                    }}>
+                </Link>
+                <Link href={"/chat"} className={`${defaultTailwind} ${color.chat}`}>
                     <FontAwesomeIcon icon={faComment} className='w-3/5 h-3/5' color='white'/>
-                </div>
-                <div className={`${defaultTailwind} ${color.interest}`} onClick={() => {
-                    handleChange("Interest")
-                    }}>
+                </Link>
+                <Link href={"/interested"} className={`${defaultTailwind} ${color.interest}`}>
                     <FontAwesomeIcon icon={faHeart} className='w-3/5 h-3/5' color='white'/>
-                </div>
+                </Link>
             </div>
             {/* Bot Part */}
             <div className='w-full flex items-center justify-center p-6 flex-col gap-4'>
-                <div className={`${defaultTailwind} ${color.payment}`} onClick={() => {
-                    handleChange("Payment")
-                    }}>
+                <Link href={"/subscribe"} className={`${defaultTailwind} ${color.payment}`}>
                     <FontAwesomeIcon icon={faDollar} className='w-3/5 h-3/5' color='white'/>
-                </div>
-                <div className={`${defaultTailwind} ${color.setting}`} onClick={() => {
-                    handleChange("Setting")
-                    }}>
+                </Link>
+                <Link href={"/setting"} className={`${defaultTailwind} ${color.setting}`}>
                     <FontAwesomeIcon icon={faGear} className='w-3/5 h-3/5' color='white'/>
-                </div>
-                <div className={`${defaultTailwind}`}>
+                </Link>
+                <Link href={"/user/login"} className={`${defaultTailwind}`}>
                     <FontAwesomeIcon icon={faRightFromBracket} className='w-3/5 h-3/5' color='white'/>
-                </div>
+                </Link>
             </div>
         </div>
     )

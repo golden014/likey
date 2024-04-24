@@ -24,6 +24,7 @@ const config: Config = {
       fontSize: {
         title : "64px",
         content : "24px",
+        timeline : "10px"
       },
       height: {
         auth_form_input : "80px",
@@ -31,13 +32,16 @@ const config: Config = {
         icon_height : "65px",
         fit_screen : "95%",
         picture_screen : "90%",
-        interact_button_height : "40px"
+        interact_button_height : "40px",
+        explore_image_height : "125px",
+        chat_profile_image_height : "60px"
       },
       width: {
         photo_form_input : "222px",
         navbar_width : "7%",
         icon_width : "65px",
-        page_width : "90%"
+        page_width : "90%",
+        chat_profile_image_width : "60px"
       },
       borderRadius: {
         default: "25px"
