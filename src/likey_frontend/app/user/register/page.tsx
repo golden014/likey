@@ -1,13 +1,12 @@
 "use client"
 import React, { useEffect } from 'react'
 import EmailAndPass from './email_and_pass'
-import { RegisterDataType } from '../model'
+import { RegisterDataType } from '../../model'
 import PhotoUpload from './photo'
 import Biodata from './biodoata'
 import InterestPage from './hobby'
 import { MUSIC_GENRES, OTHERS_HOBBIES, SPORTS } from '@/app/data'
 import { NextResponse } from 'next/server'
-
 
 const RegisterPage = () => {
 

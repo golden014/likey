@@ -29,3 +29,12 @@ export interface UserData{
     filter_access: boolean,
     hobby: string[]
 }
+
+export interface Chat{
+    user : number[],
+    chat : [{
+        message : string,
+        sender : number,
+        timestamp : number
+    }]
+}
