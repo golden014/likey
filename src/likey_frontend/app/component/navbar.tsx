@@ -29,7 +29,7 @@ const Navbar = ({pageName} : {pageName : string}) => {
         <div className='h-fit_screen bg-background border-3 border-border_placeholder rounded-default w-navbar_width flex flex-col justify-between'>
             {/* Top Part */}
             <div className='w-full flex items-center justify-center p-6 flex-col gap-4'>
-                <Link href={"/profile"} className={`${defaultTailwind} ${color.profile}`}>
+                <Link href={"/user/profile"} className={`${defaultTailwind} ${color.profile}`}>
                     <FontAwesomeIcon icon={faUser} className='w-3/5 h-3/5'/>
                 </Link>
                 <Link href={"/explore"} className={`${defaultTailwind} ${color.explore}`}>
