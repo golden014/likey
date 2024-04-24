@@ -1,3 +1,57 @@
+type Error = variant {
+  NotFound : record { msg : text };
+  InvalidPayloadData : record { msg : text };
+};
+type Result = variant { Ok : opt User; Err : Error };
+type Result_1 = variant { Ok : User; Err : Error };
+type User = record {
+  height : int32;
+  profile_picture_link : text;
+  user_email : text;
+  current_swipe : int32;
+  likey_coin : int32;
+  education : int32;
+  description : text;
+  filter_access : bool;
+  user_principal_id : text;
+  user_id : nat64;
+  user_password : text;
+  gender : text;
+  first_name : text;
+  last_name : text;
+  religion : text;
+  photo_link : vec text;
+};
+type UserPayload = record {
+  height : int32;
+  profile_picture_link : text;
+  user_email : text;
+  current_swipe : int32;
+  likey_coin : int32;
+  education : int32;
+  description : text;
+  filter_access : bool;
+  user_principal_id : text;
+  user_password : text;
+  gender : text;
+  first_name : text;
+  last_name : text;
+  religion : text;
+  photo_link : vec text;
+};
+type UserProfilePayload = record {
+  height : int32;
+  profile_picture_link : text;
+  education : int32;
+  description : text;
+  first_name : text;
+  last_name : text;
+  religion : text;
+};
 service : {
-    "greet": (text) -> (text) query;
+  create_user : (UserPayload) -> (Result);
+  get_user : (nat64) -> (Result_1) query;
+  get_user_by_principal_id : (text) -> (Result_1) query;
+  greet : (text) -> (text) query;
+  update_user : (nat64, UserProfilePayload) -> (Result_1);
 }
