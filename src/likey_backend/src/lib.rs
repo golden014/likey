@@ -198,6 +198,12 @@ fn _get_user(id: &u64) -> Option<User> {
     USER_STORAGE.with(|service| service.borrow().get(id))
 }
 
+//Greet
+#[ic_cdk::query]
+fn greet(name: String) -> String {
+    format!("Hello, {}!", name)
+}
+
 #[ic_cdk::query]
 fn get_user(id: u64) -> Result<User, Error> {
     match _get_user(&id) {

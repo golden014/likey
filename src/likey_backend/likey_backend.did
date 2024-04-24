@@ -49,5 +49,6 @@ type UserProfilePayload = record {
 service : {
   create_user : (UserPayload) -> (Result);
   get_user : (nat64) -> (Result_1) query;
+  greet : (text) -> (text) query;
   update_user : (nat64, UserProfilePayload) -> (Result_1);
 }
