@@ -15,5 +15,8 @@
   "type": "module",
   "workspaces": [
     "src/likey_frontend"
-  ]
+  ],
+  "dependencies": {
+    "@dfinity/agent": "^1.2.0"
+  }
 }

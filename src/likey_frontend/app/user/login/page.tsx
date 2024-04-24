@@ -2,6 +2,12 @@
 
 import { log } from "console"
 import { ChangeEvent, useState } from "react"
+import { likey_backend, createActor } from '../../../../declarations/likey_backend';
+import { UserProfilePayload } from "../../../../declarations/likey_backend/likey_backend.did";
+
+async function getStaticProps() {
+    const idxd = process.env.CANISTER_ID_LIKEY_BACKEND            
+}
 
 const LoginPage = () =>{
     const [loginData, setLoginData] = useState({
@@ -15,9 +21,23 @@ const LoginPage = () =>{
         }))
     }
 
-    const handleLogin = (e:any) =>{
+    const handleLogin = async (e:any) =>{
         e.preventDefault()
-        console.log(loginData)
+
+        let a: UserProfilePayload = {
+            'height' : 5,
+            'profile_picture_link' : "test",
+            'education' : 3,
+            'description' : "Test Update",
+            'first_name' : "Joshua",
+            'last_name' : "Caris",
+            'religion' : "Atheist",
+        }
+
+        console.log(a);
+        
+        let b = await likey_backend.update_user(BigInt(1),a);
+        console.log(b)
     }
 
     return(
