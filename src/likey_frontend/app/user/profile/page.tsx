@@ -38,25 +38,26 @@ const ProfilePage: any = () => {
     return (
         <div> 
             { user ? (
-                <div className="profile_page_container">
-                    <div className="profile_page_top">
-                        <div className="profile_picture_profile_page">
-                            <img src={user.profile_picture_link} alt="Trust me this is a Profile Picture" />
+                <div className="w-screen h-screen flex flex-col justify-center items-center">
+                    <div className="h-30vh w-full flex justify-around items-center bg-white">
+                        <div className="h-500 v-500">
+                            <img className="rounded-full" src={user.profile_picture_link} alt="Trust me this is a Profile Picture" />
                         </div>
-                        <div className="profile_page_top_right">
-                            <h1 className="name_title_profile_page">{user.first_name} {user.last_name}</h1>
-                            <h2 className="gender_profile_page">{user.gender}</h2>
-                            <h3 className="misc_profile_page">{user.height}cm / {user.religion}</h3>
-                            <h3 className="misc_profile_page">{EDUCATIONS[user.education]}</h3>
-                            <p className="description_profile_page">{user.description}</p>
+                        
+                        <div className="">
+                            <p className="text-black">{user.first_name} {user.last_name}</p>
+                            <p className="text-black">{user.gender}</p>
+                            <p className="text-black">{user.height}cm / {user.religion}</p>
+                            <p className="text-black">{EDUCATIONS[user.education]}</p>
+                            <p className="text-black">{user.description}</p>
                         </div>
                     </div>
 
-                    <div className="profile_page_bot">
+                    <div className="h-70vh w-full">
                         <div className="photos_profile_page">
-                           {user.photo_link.map((photo_link, index) =>(
+                           {/* {user.photo_link.map((photo_link, index) =>(
                                 <img className="photo_carousel_profile_page" key={index} src={photo_link} alt={`Photo ${index}`} />
-                           ))}
+                           ))} */}
                         </div>
                         <div className="interests_profile_page">
                             {/* TODO - hobby/interest nya nnti dibuat jadi component aja biar enak, satu component yg terima list of strings 
