@@ -1,11 +1,9 @@
 "use client"
 
-import { log } from "console"
 import { ChangeEvent, useState } from "react"
-import { likey_backend, createActor } from '../../../../declarations/likey_backend';
-import { UserProfilePayload } from "../../../../declarations/likey_backend/likey_backend.did";
 import { AuthClient } from "@dfinity/auth-client";
 import { useRouter } from "next/navigation";
+import { likey_backend } from "../../../../declarations/likey_backend";
 
 const LoginPage = () =>{
     const router = useRouter()
@@ -46,8 +44,14 @@ const LoginPage = () =>{
         if (await authClient.isAuthenticated()) {
             router.push('/home')
         }else{
-            authClient.login(defaultOptions.loginOptions).then(()=>{
-                router.push('/home')
+            authClient.login(defaultOptions.loginOptions).then(async ()=>{
+                const user = await likey_backend.get_user_by_principal_id(authClient.getIdentity().getPrincipal().toString());
+                if (user !== null) {
+                    router.push('/user/register');
+                }
+                else{
+                    router.push('/home')
+                }
             }).catch((e)=>{
                 console.log(e)
             })

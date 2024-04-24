@@ -1,6 +1,7 @@
 "use client"
-import Link from 'next/link'
+// import Link from 'next/link'
 import React, { ChangeEvent } from 'react'
+
 
 const EmailAndPass = ({ onChanges, goNext } : {onChanges: (fieldName: string, value: string) => void, goNext: () => void}) => {
 
@@ -35,14 +36,14 @@ const EmailAndPass = ({ onChanges, goNext } : {onChanges: (fieldName: string, va
                     <button onClick={goNext} className='w-full h-full bg-main rounded-default shadow-xl'>Join Likey</button>
                 </div>
                 {/* Navigate to Register */}
-                <div className='mt-6'>
+                {/* <div className='mt-6'>
                     Already have an account?
                     <Link href={"/user/login"} className='ml-1'>
                         <span className='text-boy'>Login</span> 
                         <span className='text-girl mx-1'>Likey</span> 
                         <span className='text-boy'>Now!</span> 
                     </Link>
-                </div>
+                </div> */}
             </div>
         </div>
     )

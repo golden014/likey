@@ -1,11 +1,12 @@
 "use client"
-import React from 'react'
+import React, { useEffect } from 'react'
 import EmailAndPass from './email_and_pass'
 import { RegisterDataType } from '../model'
 import PhotoUpload from './photo'
 import Biodata from './biodoata'
 import InterestPage from './interest'
 import { SPORTS } from '@/app/data'
+
 
 const RegisterPage = () => {
 
