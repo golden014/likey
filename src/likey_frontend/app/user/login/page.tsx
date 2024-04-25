@@ -3,7 +3,7 @@
 import { ChangeEvent, useState } from "react"
 import { AuthClient } from "@dfinity/auth-client";
 import { useRouter } from "next/navigation";
-import { likey_backend } from "../../../../declarations/likey_backend";
+import { getUserDataFromDB } from "@/app/utility/userDataController";
 
 const LoginPage = () =>{
     const router = useRouter()
@@ -40,12 +40,11 @@ const LoginPage = () =>{
     const handleLogin = async (e:any) =>{
         e.preventDefault();
         const authClient = await AuthClient.create(defaultOptions.createOptions);
-
         if (await authClient.isAuthenticated()) {
             router.push('/home')
         }else{
             authClient.login(defaultOptions.loginOptions).then(async ()=>{
-                const user = await likey_backend.get_user_by_principal_id(authClient.getIdentity().getPrincipal().toString());
+                const user = await getUserDataFromDB(authClient.getIdentity().getPrincipal().toString());
                 if (user !== null) {
                     router.push('/user/register');
                 }

@@ -236,7 +236,7 @@ fn greet(name: String) -> String {
     format!("Hello, {}!", name)
 }
 
-#[ic_cdk::query]
+/*#[ic_cdk::query]
 fn get_user(id: u64) -> Result<User, Error> {
     match _get_user(&id) {
         Some(user) => Ok(user),
@@ -267,6 +267,6 @@ fn update_user(id: u64, data: UserProfilePayload) -> Result<User, Error> {
             ),
         }),
     }
-}
+}*/
 
 ic_cdk::export_candid!();
