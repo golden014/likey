@@ -1,9 +1,12 @@
 #[macro_use]
 extern crate serde;
 extern crate argon2;
-use candid::{Decode, Encode};
+use candid::{Decode, Encode, Principal};
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
+use ic_stable_structures::storable::Blob;
 use ic_stable_structures::{BoundedStorable, Cell, DefaultMemoryImpl, StableBTreeMap, Storable};
+use serde::de::IntoDeserializer;
+use std::ptr::null;
 use std::{borrow::Cow, cell::RefCell};
 use regex::Regex;
 use std;
@@ -21,8 +24,8 @@ type IdCell = Cell<u64, Memory>;
 
 #[derive(candid::CandidType, Clone, Serialize, Deserialize, Default)]
 struct User {
-    user_id: u64,
-    user_principal_id: String,
+    user_id: Vec<u8>,
+    // user_principal_id: Vec<u8>,
     user_email: String,
     user_password: String,
     first_name: String,
@@ -64,7 +67,7 @@ thread_local! {
             .expect("Cannot create a user ID counter")
     );
 
-    static USER_STORAGE: RefCell<StableBTreeMap<u64, User, Memory>> =
+    static USER_STORAGE: RefCell<StableBTreeMap<Blob<29>, User, Memory>> =
         RefCell::new(StableBTreeMap::init(
             MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(1)))
     )); 
@@ -72,7 +75,7 @@ thread_local! {
 
 #[derive(candid::CandidType, Serialize, Deserialize, Default)]
 struct UserPayload {
-    user_principal_id: String,
+    user_principal_id: Vec<u8>,
     user_email: String,
     user_password: String,
     first_name: String,
@@ -133,12 +136,12 @@ fn create_user(data: UserPayload) -> Result<Option<User>, Error> {
     }
 
     //get the new id
-    let id = USER_ID_COUNTER
-        .with(|counter| {
-            let current_value = *counter.borrow().get();
-            counter.borrow_mut().set(current_value + 1)
-        })
-        .expect("cannot increment id counter");
+    // let id = USER_ID_COUNTER
+    //     .with(|counter| {
+    //         let current_value = *counter.borrow().get();
+    //         counter.borrow_mut().set(current_value + 1)
+    //     })
+    //     .expect("cannot increment id counter");
 
     let password = data.user_password.as_bytes();
     let salt = b"randomsalt";
@@ -146,8 +149,7 @@ fn create_user(data: UserPayload) -> Result<Option<User>, Error> {
     let hash = argon2::hash_encoded(password, salt, &config).unwrap();
 
     let new_user = User {
-        user_id: id,
-        user_principal_id: data.user_principal_id,
+        user_id: data.user_principal_id,
         user_email: data.user_email,
         user_password: hash,
         first_name: data.first_name,
@@ -190,44 +192,46 @@ fn create_user_validation(data: &UserPayload) -> bool {
 }
 
 fn do_insert_user(data: &User) -> bool {
-    let a = USER_STORAGE.with(|service| service.borrow_mut().insert(data.user_id, data.clone()));
+    let p = Blob::from_bytes(std::borrow::Cow::Borrowed(&data.user_id));
+    let a = USER_STORAGE.with(|service| service.borrow_mut().insert(p, data.clone()));
     match  a {
         Some(_user) => return false,
         None => return true,
     }
 }
 
-fn _get_user(id: &u64) -> Option<User> {
-    USER_STORAGE.with(|service| service.borrow().get(id))
+fn _get_user(id: &Vec<u8>) -> Option<User> {
+    let p = Blob::from_bytes(std::borrow::Cow::Borrowed(id));
+    USER_STORAGE.with(|service| service.borrow().get(&p))
 }
 
-fn _get_user_by_principal_id(principal_id:String) -> Vec<User> {
-    USER_STORAGE.with(|us| {
-        us
-        .borrow()
-        .iter()
-        .filter_map(|(_,user)| {
-            if user.user_principal_id == *principal_id {
-                Some(user.clone())
-            } else{
-                None
-            }
-        }).collect()
-    })
-}
+// fn _get_user_by_principal_id(principal_id:Vec<u8>) -> Vec<User> {
+//     USER_STORAGE.with(|us| {
+//         us
+//         .borrow()
+//         .iter()
+//         .filter_map(|(_,user)| {
+//             if user.user_principal_id == *principal_id {
+//                 Some(user.clone())
+//             } else{
+//                 None
+//             }
+//         }).collect()
+//     })
+// }
 
-#[ic_cdk::query]
-fn get_user_by_principal_id(principal_id:String) -> Result<User, Error> {
-    let a = _get_user_by_principal_id(principal_id);
-    if a.len() == 0{
-        return  Err(Error::NotFound {
-            msg: format!("not found"),
-        })
-    }
-    else {
-        return Ok(a.first().unwrap().clone())
-    }
-}
+// #[ic_cdk::query]
+// fn get_user_by_principal_id(principal_id:Vec<u8>) -> Result<User, Error> {
+//     let a = _get_user_by_principal_id(principal_id);
+//     if a.len() == 0{
+//         return  Err(Error::NotFound {
+//             msg: format!("not found"),
+//         })
+//     }
+//     else {
+//         return Ok(a.first().unwrap().clone())
+//     }
+// }
 
 
 //Greet
@@ -236,17 +240,17 @@ fn greet(name: String) -> String {
     format!("Hello, {}!", name)
 }
 
-/*#[ic_cdk::query]
-fn get_user(id: u64) -> Result<User, Error> {
+#[ic_cdk::query]
+fn get_user(id: Vec<u8>) -> Result<User, Error> {
     match _get_user(&id) {
         Some(user) => Ok(user),
         None => Err(Error::NotFound {
-            msg: format!("a user with id={} not found", id),
+            msg: format!("a user with id={:?} not found", id),
         }),
     }
 }
 
-#[ic_cdk::update]
+/*#[ic_cdk::update]
 fn update_user(id: u64, data: UserProfilePayload) -> Result<User, Error> {
     match USER_STORAGE.with(|service| service.borrow().get(&id)) {
         Some(mut u) => {

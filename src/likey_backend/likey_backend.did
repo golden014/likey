@@ -13,8 +13,7 @@ type User = record {
   education : int32;
   description : text;
   filter_access : bool;
-  user_principal_id : text;
-  user_id : nat64;
+  user_id : blob;
   user_password : text;
   gender : text;
   first_name : text;
@@ -31,7 +30,7 @@ type UserPayload = record {
   education : int32;
   description : text;
   filter_access : bool;
-  user_principal_id : text;
+  user_principal_id : blob;
   user_password : text;
   gender : text;
   first_name : text;
@@ -41,6 +40,6 @@ type UserPayload = record {
 };
 service : {
   create_user : (UserPayload) -> (Result);
-  get_user_by_principal_id : (text) -> (Result_1) query;
+  get_user : (blob) -> (Result_1) query;
   greet : (text) -> (text) query;
 }
