@@ -89,15 +89,15 @@ const ChatPage = () => {
                         : 
                         <div className='w-full h-full'>
                             {
-                                chats.map((bubble) => {
+                                chats.map((bubble, index) => {
                                     
                                     if(bubble.user.includes(currentUser) && bubble.user.includes(targetUser)){
                                         return(
-                                            <div>
+                                            <div key={index}>
                                                 {
-                                                    bubble.chat.map((message) => {
+                                                    bubble.chat.map((message, idx) => {
                                                         return(
-                                                            <div>
+                                                            <div key={idx}>
                                                                 {message.message}
                                                             </div>
                                                         )
