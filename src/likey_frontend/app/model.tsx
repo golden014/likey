@@ -32,9 +32,12 @@ export interface UserData{
 
 export interface Chat{
     user : number[],
-    chat : [{
+    message : [{
         message : string,
         sender : number,
-        timestamp : number
+        timestamp : {
+            seconds : number,
+            nanoseconds : number
+        }
     }]
 }

@@ -25,7 +25,7 @@ const MonthData: {[key : number] : string} = {
 
 export const DateConverter = (timestamp : number) => {
     
-    const date = new Date(timestamp); 
+    const date = new Date(timestamp * 1000); 
     const year = date.getFullYear();
     const month = date.getMonth() + 1;
     
@@ -55,4 +55,14 @@ export const DateConverter = (timestamp : number) => {
     }
 
     return `${MonthData[month]} ${day}, ${year}`;
+}
+
+export const ChatDateConverter = (timestamp : number) => {
+    
+    const date = new Date(timestamp * 1000); 
+
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+
+    return `${hours}:${minutes}`;
 }

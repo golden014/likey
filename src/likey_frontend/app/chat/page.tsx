@@ -2,13 +2,13 @@
 import React, { ChangeEvent } from 'react'
 import Navbar from '../component/navbar';
 import Image from 'next/image';
-import { CHAT_FRIENDS, DUMMY_IMAGE, DUMMY_NAME } from '../dummy_data';
+import { DUMMY_IMAGE } from '../dummy_data';
 import { DateConverter } from '../utility/converter';
 import { Chat } from '../model';
-import { get, ref } from 'firebase/database';
 import { database } from '../firebaseConfig';
 import Emptypage from './emptyPage';
 import { collection, getDocs, onSnapshot, orderBy, query, where } from 'firebase/firestore';
+import ChatBoxPage from './chatPage';
 
 const ChatPage = () => {
 
@@ -16,8 +16,21 @@ const ChatPage = () => {
     const [currentUser, setCurrentUser] = React.useState<number>(3)
     const [targetUser, setTargetUser] = React.useState<number>(0)
 
+    const [showChat, setShowChat] = React.useState<Chat>({
+        user : [],
+        message : [{
+            message : "",
+            sender : 0,
+            timestamp : {
+                seconds : 0,
+                nanoseconds : 0
+            }
+        }]
+    })
+
     const changeCurrentUser = (e : ChangeEvent<HTMLInputElement>) => {
         setCurrentUser(parseInt(e.target.value))
+        setTargetUser(0)
     }
 
     const changeTargetUser = (e : Chat) => {
@@ -26,7 +39,9 @@ const ChatPage = () => {
                 const user = [...chat.user]; 
                 const index = user.indexOf(currentUser);
                 user.splice(index, 1);
+                console.log(user[0])
                 setTargetUser(user[0])
+                setShowChat(chat)
             }
         });
     }
@@ -38,17 +53,21 @@ const ChatPage = () => {
 
             const q = query(collection(database, "chat_room"), where("user", "array-contains", currentUser))
 
-            const snapshot = await getDocs(q)
-            // console.log(snapshot.docs)
-            snapshot.docs.map((shot) => {
-                console.log({...shot.data()})
-                console.log("ewe ewe")
+            const newData : Chat[] = []
+
+            const unsub = onSnapshot(q, (snapshot) => {
+                snapshot.forEach((doc) => {
+                    console.log({...doc.data()})
+                    newData.push({...doc.data()} as Chat)
+                })
+
+                console.log(newData);
+            
+                setChats(newData)
             })
-            console.log("======")
+            
         }
-
         fetchData()
-
 
     }, [currentUser]);
 
@@ -75,7 +94,13 @@ const ChatPage = () => {
                                         </div>
                                     </div>
                                     <div className='font-bold text-timeline'>
-                                        {DateConverter(chat_data.chat[chat_data.chat.length - 1].timestamp)}
+                                        {/* {chat_data.message[0].message} */}
+                                        {/* {chat_data.chat[0].timestamp} */}
+                                        {/* {DateConverter(chat_data.message[chat_data.message.length - 1].timestamp)} */}
+                                        {
+                                        chat_data.message?
+                                        DateConverter(chat_data.message[chat_data.message.length - 1].timestamp.seconds) :
+                                        ""}
                                     </div>
                                 </div> 
                             )
@@ -87,29 +112,7 @@ const ChatPage = () => {
                         targetUser == 0 ? 
                         <Emptypage/>
                         : 
-                        <div className='w-full h-full'>
-                            {
-                                chats.map((bubble, index) => {
-                                    
-                                    if(bubble.user.includes(currentUser) && bubble.user.includes(targetUser)){
-                                        return(
-                                            <div key={index}>
-                                                {
-                                                    bubble.chat.map((message, idx) => {
-                                                        return(
-                                                            <div key={idx}>
-                                                                {message.message}
-                                                            </div>
-                                                        )
-                                                    })
-                                                }
-                                            </div>
-                                        )
-                                    }
-
-                                })
-                            }
-                        </div>
+                        <ChatBoxPage chatList={showChat} id={targetUser}/>
                     }
                 </div>
             </div>
