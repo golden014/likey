@@ -31,6 +31,7 @@ export interface UserData{
 }
 
 export interface Chat{
+    id : string,
     user : number[],
     message : [{
         message : string,
