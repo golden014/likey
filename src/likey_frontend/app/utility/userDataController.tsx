@@ -1,19 +1,23 @@
+import { setCookie, getCookie, deleteCookie } from "cookies-next";
 import { likey_backend } from "../../../declarations/likey_backend"
-import secureLocalStorage from "react-secure-storage";
+import { enc, dec } from "./cryptController";
+
 
 export const getUserDataFromDB = async (id : number[]) => {
     const data = await likey_backend.get_user(id)
 
     if(data != null){
-        secureLocalStorage.clear();
+        deleteCookie("user-data")
         if(Object.keys(data)[0] == "Ok"){
-            secureLocalStorage.setItem("userData",Object.values(data)[0]);
+            let input = await enc(JSON.stringify(Object.values(data)[0]))
+            setCookie("user-data",input)
         }
     }
 
     return data
 }
 
-export const getUserDataFromStorage = () => {
-    return secureLocalStorage.getItem("userData")
+export const getUserDataFromStorage = async () => {
+    let cook = await dec(getCookie("user-data") || "")
+    return JSON.parse(cook || "{}")
 }

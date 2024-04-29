@@ -34,8 +34,18 @@ type UserPayload = record {
   religion : text;
   photo_link : vec text;
 };
+type UserProfilePayload = record {
+  height : int32;
+  profile_picture_link : text;
+  education : int32;
+  description : text;
+  first_name : text;
+  last_name : text;
+  religion : text;
+};
 service : {
   create_user : (UserPayload) -> (Result);
   get_user : (blob) -> (Result_1) query;
   greet : (text) -> (text) query;
+  update_user : (blob, UserProfilePayload) -> (Result_1);
 }

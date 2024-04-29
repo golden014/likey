@@ -4,7 +4,7 @@ extern crate argon2;
 use candid::{Decode, Encode};
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
 use ic_stable_structures::storable::Blob;
-use ic_stable_structures::{BoundedStorable, Cell, DefaultMemoryImpl, StableBTreeMap, Storable};
+use ic_stable_structures::{BoundedStorable, DefaultMemoryImpl, StableBTreeMap, Storable};
 // use serde::de::IntoDeserializer;
 // use std::ptr::null;
 use std::{borrow::Cow, cell::RefCell};
@@ -20,7 +20,7 @@ use std;
 // use argon2::{Config};
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
-type IdCell = Cell<u64, Memory>;
+// type IdCell = Cell<u64, Memory>;
 
 #[derive(candid::CandidType, Clone, Serialize, Deserialize, Default)]
 struct User {
@@ -59,10 +59,10 @@ thread_local! {
         MemoryManager::init(DefaultMemoryImpl::default())
     );
 
-    static USER_ID_COUNTER: RefCell<IdCell> = RefCell::new(
-        IdCell::init(MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(0))), 0)
-            .expect("Cannot create a user ID counter")
-    );
+    // static USER_ID_COUNTER: RefCell<Cell<u64, Memory>> = RefCell::new(
+    //     Cell<u64, Memory>::init(MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(0))), 0)
+    //         .expect("Cannot create a user ID counter")
+    // );
 
     static USER_STORAGE: RefCell<StableBTreeMap<Blob<29>, User, Memory>> =
         RefCell::new(StableBTreeMap::init(
@@ -238,9 +238,9 @@ fn get_user(id: Vec<u8>) -> Result<User, Error> {
     }
 }
 
-/*#[ic_cdk::update]
-fn update_user(id: u64, data: UserProfilePayload) -> Result<User, Error> {
-    match USER_STORAGE.with(|service| service.borrow().get(&id)) {
+#[ic_cdk::update]
+fn update_user(id: Vec<u8>, data: UserProfilePayload) -> Result<User, Error> {
+    match USER_STORAGE.with(|service| service.borrow().get(&Blob::from_bytes(std::borrow::Cow::Borrowed(&id)))) {
         Some(mut u) => {
             u.first_name= data.first_name;
             u.last_name= data.last_name;
@@ -254,11 +254,11 @@ fn update_user(id: u64, data: UserProfilePayload) -> Result<User, Error> {
         }
         None => Err(Error::NotFound {
             msg: format!(
-                "couldn't update user with id={}. user not found",
+                "couldn't update user with id={:?}. user not found",
                 id
             ),
         }),
     }
-}*/
+}
 
 ic_cdk::export_candid!();
