@@ -97,3 +97,24 @@ export const CHAT_FRIENDS = [
         time : 1691625756041
     },
 ]
+
+const chat_room = [
+    {
+        user : [1,2],
+        chat : [
+            {
+                sender : 1,
+                message : "Hello",
+                timestamp : 1713935756041
+            },
+            {
+                sender : 2,
+                message : "Hello Juga",
+                timestamp : 1713935756043
+            }
+        ]
+    }
+]
+
+export const DUMMY_IMAGE = "https://staticg.sportskeeda.com/editor/2022/04/4ebb6-16509090411191-1920.jpg"
+export const DUMMY_NAME = "KKatamina"

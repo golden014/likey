@@ -1,6 +1,6 @@
 "use client"
 import { useEffect, useState } from "react";
-import { UserData } from "../model";
+import { UserData } from "../../model";
 import { EDUCATIONS } from "@/app/data";
 
 const ProfilePage: any = () => {

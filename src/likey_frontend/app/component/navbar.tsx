@@ -47,9 +47,6 @@ const Navbar = ({pageName} : {pageName : string}) => {
                 <Link href={"/subscribe"} className={`${defaultTailwind} ${color.payment}`}>
                     <FontAwesomeIcon icon={faDollar} className='w-3/5 h-3/5' color='white'/>
                 </Link>
-                <Link href={"/setting"} className={`${defaultTailwind} ${color.setting}`}>
-                    <FontAwesomeIcon icon={faGear} className='w-3/5 h-3/5' color='white'/>
-                </Link>
                 <Link href={"/user/login"} className={`${defaultTailwind}`}>
                     <FontAwesomeIcon icon={faRightFromBracket} className='w-3/5 h-3/5' color='white'/>
                 </Link>

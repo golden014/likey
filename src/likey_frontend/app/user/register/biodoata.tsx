@@ -1,5 +1,4 @@
 import { EDUCATIONS, GENDERS, RELIGIONS } from '@/app/data';
-import Image from 'next/image';
 import React, { useState, ChangeEvent } from 'react';
 
 const Biodata = ({ onChanges, goNext } : {onChanges: (fieldName: string, value: string) => void, goNext: () => void}) => {
