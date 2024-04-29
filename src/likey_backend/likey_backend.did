@@ -7,14 +7,12 @@ type Result_1 = variant { Ok : User; Err : Error };
 type User = record {
   height : int32;
   profile_picture_link : text;
-  user_email : text;
   current_swipe : int32;
   likey_coin : int32;
   education : int32;
   description : text;
   filter_access : bool;
   user_id : blob;
-  user_password : text;
   gender : text;
   first_name : text;
   last_name : text;
@@ -24,14 +22,12 @@ type User = record {
 type UserPayload = record {
   height : int32;
   profile_picture_link : text;
-  user_email : text;
   current_swipe : int32;
   likey_coin : int32;
   education : int32;
   description : text;
   filter_access : bool;
   user_principal_id : blob;
-  user_password : text;
   gender : text;
   first_name : text;
   last_name : text;
