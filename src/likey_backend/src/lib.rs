@@ -5,11 +5,12 @@ use candid::{Decode, Encode};
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
 use ic_stable_structures::storable::Blob;
 use ic_stable_structures::{BoundedStorable, DefaultMemoryImpl, StableBTreeMap, Storable};
+use std::time::SystemTime;
 // use serde::de::IntoDeserializer;
 // use std::ptr::null;
 use std::{borrow::Cow, cell::RefCell};
 // use regex::Regex;
-use std;
+use std::{self, result};
 // use argon2::{
 //     password_hash::{
 //         rand_core::OsRng,
@@ -18,6 +19,9 @@ use std;
 //     Argon2
 // };
 // use argon2::{Config};
+
+//module generate swipe
+pub mod generate_swipe;
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 // type IdCell = Cell<u64, Memory>;
@@ -39,6 +43,13 @@ struct User {
     filter_access: bool,
 }
 
+#[derive(candid::CandidType, Clone, Serialize, Deserialize, Default)]
+struct SwipePool {
+    owner_id: Vec<u8>,
+    user_ids: Vec<Vec<u8>>,
+    date: String
+}
+
 impl Storable for User {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
         Cow::Owned(Encode!(self).unwrap())
@@ -49,7 +60,22 @@ impl Storable for User {
     }
 }
 
+impl Storable for SwipePool {
+    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
+        Cow::Owned(Encode!(self).unwrap())
+    }
+
+    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
+        Decode!(bytes.as_ref(), Self).unwrap()
+    }
+}
+
 impl BoundedStorable for User {
+    const MAX_SIZE: u32 = 1024;
+    const IS_FIXED_SIZE: bool = false;
+}
+
+impl BoundedStorable for SwipePool {
     const MAX_SIZE: u32 = 1024;
     const IS_FIXED_SIZE: bool = false;
 }
@@ -68,6 +94,11 @@ thread_local! {
         RefCell::new(StableBTreeMap::init(
             MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(1)))
     )); 
+
+    static SWIPE_POOL_STORAGE: RefCell<StableBTreeMap<Blob<29>, SwipePool, Memory>> =
+        RefCell::new(StableBTreeMap::init(
+            MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(2)))
+    ));
 }
 
 #[derive(candid::CandidType, Serialize, Deserialize, Default)]
@@ -123,6 +154,7 @@ enum Error {
 
 #[ic_cdk::update]
 fn create_user(data: UserPayload) -> Result<Option<User>, Error> {
+
     //validate new user's data
     // let user_data_valid = create_user_validation(&data);
 
@@ -260,5 +292,24 @@ fn update_user(id: Vec<u8>, data: UserProfilePayload) -> Result<User, Error> {
         }),
     }
 }
+
+#[ic_cdk::update]
+fn get_feeds(id: Vec<u8>) -> Result<Option<Vec<Vec<u8>>>, Error> {
+    //TODO: cek swipe pool klo gaada panggil generate_swipe function di generate_swipe/mod.rs
+
+    //check if the feeds for the user for today's date already generated or not
+    // let p = Blob::from_bytes(std::borrow::Cow::Borrowed(&id));
+    // SWIPE_POOL_STORAGE.with(|service| {
+    //     service
+    //     .borrow()
+    //     .iter()
+    //     .filter_map(|(_, swipe_pool)| {
+    //         if swipe_pool.owner_id == id && swipe_pool.date == 
+    //     })
+    // });
+
+    return Result::Err(Error::NotFound { msg: "Invalid user ID".to_string() });
+}
+
 
 ic_cdk::export_candid!();
