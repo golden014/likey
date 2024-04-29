@@ -3,7 +3,8 @@
 import { ChangeEvent, useState } from "react"
 import { AuthClient } from "@dfinity/auth-client";
 import { useRouter } from "next/navigation";
-import { likey_backend } from "../../../../declarations/likey_backend";
+import { getUserDataFromDB, getUserDataFromStorage } from "@/app/utility/userDataController";
+
 
 const LoginPage = () =>{
     const router = useRouter()
@@ -39,19 +40,42 @@ const LoginPage = () =>{
 
     const handleLogin = async (e:any) =>{
         e.preventDefault();
-        const authClient = await AuthClient.create(defaultOptions.createOptions);
 
+        // console.log(await getUserDataFromStorage())
+
+        // var temp = [100,238,111,73,221,32,5,181,37,11,79,95,66,249,28,123,212,136,29,121,163,165,57,28,176,110,237,97,2]        
+        // var user = await getUserDataFromDB(temp)
+        // console.log(JSON.stringify(user))
+        // var a = await enc(JSON.stringify(user));
+        // console.log(a)
+        // var b = await dec(a);
+        // console.log(b)
+        // var c = JSON.parse(b || "");
+        // console.log(c)
+
+
+        // console.log(temp)
+        // console.log(await getUserDataFromStorage())
+
+        const authClient = await AuthClient.create(defaultOptions.createOptions);
+        
+        // console.log(authClient.getIdentity().getPrincipal())
+        const user = await getUserDataFromDB(Array.from(authClient.getIdentity().getPrincipal().toUint8Array()))
+        // console.log(user)
         if (await authClient.isAuthenticated()) {
-            router.push('/home')
+        //     router.push('/home')
         }else{
             authClient.login(defaultOptions.loginOptions).then(async ()=>{
-                const user = await likey_backend.get_user_by_principal_id(authClient.getIdentity().getPrincipal().toString());
-                if (user !== null) {
-                    router.push('/user/register');
-                }
-                else{
-                    router.push('/home')
-                }
+        //         const user = await getUserDataFromDB(authClient.getIdentity().getPrincipal().toString())
+                
+
+        //         const user = await likey_backend.get_user(authClient.getIdentity().getPrincipal())
+        //         if (user !== null) {
+        //             // router.push('/user/register');
+        //         }
+        //         else{
+        //             // router.push('/home')
+        //         }
             }).catch((e)=>{
                 console.log(e)
             })

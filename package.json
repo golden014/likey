@@ -19,6 +19,7 @@
   "dependencies": {
     "@dfinity/agent": "^1.2.0",
     "@dfinity/auth-client": "^1.2.0",
-    "firebase": "^10.11.0"
+    "firebase": "^10.11.0",
+    "i": "^0.3.7"
   }
 }

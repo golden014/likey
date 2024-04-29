@@ -3,9 +3,12 @@ extern crate serde;
 extern crate argon2;
 use candid::{Decode, Encode};
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
-use ic_stable_structures::{BoundedStorable, Cell, DefaultMemoryImpl, StableBTreeMap, Storable};
+use ic_stable_structures::storable::Blob;
+use ic_stable_structures::{BoundedStorable, DefaultMemoryImpl, StableBTreeMap, Storable};
+// use serde::de::IntoDeserializer;
+// use std::ptr::null;
 use std::{borrow::Cow, cell::RefCell};
-use regex::Regex;
+// use regex::Regex;
 use std;
 // use argon2::{
 //     password_hash::{
@@ -14,17 +17,14 @@ use std;
 //     },
 //     Argon2
 // };
-use argon2::{Config};
+// use argon2::{Config};
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
-type IdCell = Cell<u64, Memory>;
+// type IdCell = Cell<u64, Memory>;
 
 #[derive(candid::CandidType, Clone, Serialize, Deserialize, Default)]
 struct User {
-    user_id: u64,
-    user_principal_id: String,
-    user_email: String,
-    user_password: String,
+    user_id: Vec<u8>,
     first_name: String,
     last_name: String,
     height: i32,
@@ -59,12 +59,12 @@ thread_local! {
         MemoryManager::init(DefaultMemoryImpl::default())
     );
 
-    static USER_ID_COUNTER: RefCell<IdCell> = RefCell::new(
-        IdCell::init(MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(0))), 0)
-            .expect("Cannot create a user ID counter")
-    );
+    // static USER_ID_COUNTER: RefCell<Cell<u64, Memory>> = RefCell::new(
+    //     Cell<u64, Memory>::init(MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(0))), 0)
+    //         .expect("Cannot create a user ID counter")
+    // );
 
-    static USER_STORAGE: RefCell<StableBTreeMap<u64, User, Memory>> =
+    static USER_STORAGE: RefCell<StableBTreeMap<Blob<29>, User, Memory>> =
         RefCell::new(StableBTreeMap::init(
             MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(1)))
     )); 
@@ -72,9 +72,7 @@ thread_local! {
 
 #[derive(candid::CandidType, Serialize, Deserialize, Default)]
 struct UserPayload {
-    user_principal_id: String,
-    user_email: String,
-    user_password: String,
+    user_principal_id: Vec<u8>,
     first_name: String,
     last_name: String,
     height: i32,
@@ -106,50 +104,42 @@ enum Error {
     InvalidPayloadData {msg: String}
 }
 
-#[derive(candid::CandidType, Deserialize, Serialize)]
-enum UniqueAttribue{
-    UserEmail
-}
+// #[derive(candid::CandidType, Deserialize, Serialize)]
+// enum UniqueAttribue{
+//     UserEmail
+// }
 
-fn attribute_unique_validation(data: &String, attribute: UniqueAttribue) -> bool {
-    let is_unique: bool = !USER_STORAGE.with(|s| {
-        s.borrow().iter().any(|(_, user_data)| {
-            match attribute {
-                UniqueAttribue::UserEmail => user_data.user_email == *data,
-            }
-        })
-    });
+// fn attribute_unique_validation(data: &String, attribute: UniqueAttribue) -> bool {
+//     let is_unique: bool = !USER_STORAGE.with(|s| {
+//         s.borrow().iter().any(|(_, user_data)| {
+//             match attribute {
+//                 UniqueAttribue::UserEmail => user_data.user_email == *data,
+//             }
+//         })
+//     });
 
-    is_unique
-}
+//     is_unique
+// }
 
 #[ic_cdk::update]
 fn create_user(data: UserPayload) -> Result<Option<User>, Error> {
     //validate new user's data
-    let user_data_valid = create_user_validation(&data);
+    // let user_data_valid = create_user_validation(&data);
 
-    if user_data_valid == false {
-        return Result::Err(Error::InvalidPayloadData { msg: "Invalid data, make sure the email is in valid format, email and username must be unique".to_string() })
-    }
+    // if user_data_valid == false {
+    //     return Result::Err(Error::InvalidPayloadData { msg: "Invalid data, make sure the email is in valid format, email and username must be unique".to_string() })
+    // }
 
     //get the new id
-    let id = USER_ID_COUNTER
-        .with(|counter| {
-            let current_value = *counter.borrow().get();
-            counter.borrow_mut().set(current_value + 1)
-        })
-        .expect("cannot increment id counter");
-
-    let password = data.user_password.as_bytes();
-    let salt = b"randomsalt";
-    let config = Config::default();
-    let hash = argon2::hash_encoded(password, salt, &config).unwrap();
+    // let id = USER_ID_COUNTER
+    //     .with(|counter| {
+    //         let current_value = *counter.borrow().get();
+    //         counter.borrow_mut().set(current_value + 1)
+    //     })
+    //     .expect("cannot increment id counter");
 
     let new_user = User {
-        user_id: id,
-        user_principal_id: data.user_principal_id,
-        user_email: data.user_email,
-        user_password: hash,
+        user_id: data.user_principal_id,
         first_name: data.first_name,
         last_name: data.last_name,
         height: data.height,
@@ -174,60 +164,62 @@ fn create_user(data: UserPayload) -> Result<Option<User>, Error> {
 
 }
 
-fn create_user_validation(data: &UserPayload) -> bool {
-    //email format validation using regex
-    let email_format = Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$").unwrap();
+// fn create_user_validation(data: &UserPayload) -> bool {
+//     //email format validation using regex
+//     let email_format = Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$").unwrap();
 
-    //check if the email matches the regex
-    let email_format_valid = email_format.is_match(&data.user_email);
+//     //check if the email matches the regex
+//     let email_format_valid = email_format.is_match(&data.user_email);
 
     
-    //check if email and username is unique
-    let email_unique = attribute_unique_validation(&data.user_email, UniqueAttribue::UserEmail); 
+//     //check if email and username is unique
+//     let email_unique = attribute_unique_validation(&data.user_email, UniqueAttribue::UserEmail); 
     
 
-    return email_format_valid && email_unique;
-}
+//     return email_format_valid && email_unique;
+// }
 
 fn do_insert_user(data: &User) -> bool {
-    let a = USER_STORAGE.with(|service| service.borrow_mut().insert(data.user_id, data.clone()));
+    let p = Blob::from_bytes(std::borrow::Cow::Borrowed(&data.user_id));
+    let a = USER_STORAGE.with(|service| service.borrow_mut().insert(p, data.clone()));
     match  a {
         Some(_user) => return false,
         None => return true,
     }
 }
 
-fn _get_user(id: &u64) -> Option<User> {
-    USER_STORAGE.with(|service| service.borrow().get(id))
+fn _get_user(id: &Vec<u8>) -> Option<User> {
+    let p = Blob::from_bytes(std::borrow::Cow::Borrowed(id));
+    USER_STORAGE.with(|service| service.borrow().get(&p))
 }
 
-fn _get_user_by_principal_id(principal_id:String) -> Vec<User> {
-    USER_STORAGE.with(|us| {
-        us
-        .borrow()
-        .iter()
-        .filter_map(|(_,user)| {
-            if user.user_principal_id == *principal_id {
-                Some(user.clone())
-            } else{
-                None
-            }
-        }).collect()
-    })
-}
+// fn _get_user_by_principal_id(principal_id:Vec<u8>) -> Vec<User> {
+//     USER_STORAGE.with(|us| {
+//         us
+//         .borrow()
+//         .iter()
+//         .filter_map(|(_,user)| {
+//             if user.user_principal_id == *principal_id {
+//                 Some(user.clone())
+//             } else{
+//                 None
+//             }
+//         }).collect()
+//     })
+// }
 
-#[ic_cdk::query]
-fn get_user_by_principal_id(principal_id:String) -> Result<User, Error> {
-    let a = _get_user_by_principal_id(principal_id);
-    if a.len() == 0{
-        return  Err(Error::NotFound {
-            msg: format!("not found"),
-        })
-    }
-    else {
-        return Ok(a.first().unwrap().clone())
-    }
-}
+// #[ic_cdk::query]
+// fn get_user_by_principal_id(principal_id:Vec<u8>) -> Result<User, Error> {
+//     let a = _get_user_by_principal_id(principal_id);
+//     if a.len() == 0{
+//         return  Err(Error::NotFound {
+//             msg: format!("not found"),
+//         })
+//     }
+//     else {
+//         return Ok(a.first().unwrap().clone())
+//     }
+// }
 
 
 //Greet
@@ -237,18 +229,18 @@ fn greet(name: String) -> String {
 }
 
 #[ic_cdk::query]
-fn get_user(id: u64) -> Result<User, Error> {
+fn get_user(id: Vec<u8>) -> Result<User, Error> {
     match _get_user(&id) {
         Some(user) => Ok(user),
         None => Err(Error::NotFound {
-            msg: format!("a user with id={} not found", id),
+            msg: format!("a user with id={:?} not found", id),
         }),
     }
 }
 
 #[ic_cdk::update]
-fn update_user(id: u64, data: UserProfilePayload) -> Result<User, Error> {
-    match USER_STORAGE.with(|service| service.borrow().get(&id)) {
+fn update_user(id: Vec<u8>, data: UserProfilePayload) -> Result<User, Error> {
+    match USER_STORAGE.with(|service| service.borrow().get(&Blob::from_bytes(std::borrow::Cow::Borrowed(&id)))) {
         Some(mut u) => {
             u.first_name= data.first_name;
             u.last_name= data.last_name;
@@ -262,7 +254,7 @@ fn update_user(id: u64, data: UserProfilePayload) -> Result<User, Error> {
         }
         None => Err(Error::NotFound {
             msg: format!(
-                "couldn't update user with id={}. user not found",
+                "couldn't update user with id={:?}. user not found",
                 id
             ),
         }),

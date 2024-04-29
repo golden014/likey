@@ -63,7 +63,7 @@ const ProfilePage: any = () => {
                             {/* TODO - hobby/interest nya nnti dibuat jadi component aja biar enak, satu component yg terima list of strings 
                             utk ngemap tiap hobby, satu utk buat card hobby/interest nya */}
                             {user.hobby.map((hobby, index) => (
-                                <p>{hobby}</p>
+                                <p key={hobby}>{hobby}</p>
                             ))}
                         </div>
                     </div>
