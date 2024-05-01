@@ -9,6 +9,12 @@ use crate::{Error, User, _get_user};
 
 fn generate_swipe(user_id: Vec<u8>) -> Result<Option<Vec<Vec<u8>>>, Error>{
 
+    let curr_user = _get_user(&user_id);
+
+    if curr_user.is_none() {
+        return Result::Err(Error::NotFound { msg: "Invalid user ID".to_string() });
+    }
+
     //get user's current swipe
     let current_user_swipe_limit = match _get_user(&user_id) {
         Some(user) => user.current_swipe,
@@ -19,6 +25,9 @@ fn generate_swipe(user_id: Vec<u8>) -> Result<Option<Vec<Vec<u8>>>, Error>{
     if current_user_swipe_limit == -1 {
         return Result::Err(Error::NotFound { msg: "Invalid user ID".to_string() });
     }
+
+    //next step: bikin vectors of user ids yang match dengan filter yang ada
+
     
     //TODO: bikin filter nya utk religion, age, dll
     return Result::Ok(None);

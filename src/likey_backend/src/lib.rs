@@ -4,8 +4,8 @@ extern crate argon2;
 use candid::{Decode, Encode};
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
 use ic_stable_structures::storable::Blob;
-use ic_stable_structures::{BoundedStorable, DefaultMemoryImpl, StableBTreeMap, Storable};
-use std::time::SystemTime;
+use ic_stable_structures::{BoundedStorable, DefaultMemoryImpl, StableBTreeMap, Storable, StableVec};
+use chrono::prelude::*;
 // use serde::de::IntoDeserializer;
 // use std::ptr::null;
 use std::{borrow::Cow, cell::RefCell};
@@ -50,6 +50,12 @@ struct SwipePool {
     date: String
 }
 
+#[derive(candid::CandidType, Clone, Serialize, Deserialize, Default)]
+struct Hobby {
+    user_id: Vec<u8>,
+    name: String,
+}
+
 impl Storable for User {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
         Cow::Owned(Encode!(self).unwrap())
@@ -70,12 +76,27 @@ impl Storable for SwipePool {
     }
 }
 
+impl Storable for Hobby {
+    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
+        Cow::Owned(Encode!(self).unwrap())
+    }
+
+    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
+        Decode!(bytes.as_ref(), Self).unwrap()
+    }
+}
+
 impl BoundedStorable for User {
     const MAX_SIZE: u32 = 1024;
     const IS_FIXED_SIZE: bool = false;
 }
 
 impl BoundedStorable for SwipePool {
+    const MAX_SIZE: u32 = 1024;
+    const IS_FIXED_SIZE: bool = false;
+}
+
+impl BoundedStorable for Hobby {
     const MAX_SIZE: u32 = 1024;
     const IS_FIXED_SIZE: bool = false;
 }
@@ -99,6 +120,13 @@ thread_local! {
         RefCell::new(StableBTreeMap::init(
             MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(2)))
     ));
+
+    //pakai stableVec soalnya hobby storage gapakai key, tapi dia return nya result yg bisa jadi error, jadi perlu dipasangin unwrap
+    static HOBBY_STORAGE: RefCell<StableVec<Hobby, Memory>> = 
+        RefCell::new(StableVec::init(
+            MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(3)))
+    ).unwrap_or_else(|_| panic!("Failed to initialize Hobby Storage")));
+
 }
 
 #[derive(candid::CandidType, Serialize, Deserialize, Default)]
@@ -298,16 +326,29 @@ fn get_feeds(id: Vec<u8>) -> Result<Option<Vec<Vec<u8>>>, Error> {
     //TODO: cek swipe pool klo gaada panggil generate_swipe function di generate_swipe/mod.rs
 
     //check if the feeds for the user for today's date already generated or not
-    // let p = Blob::from_bytes(std::borrow::Cow::Borrowed(&id));
-    // SWIPE_POOL_STORAGE.with(|service| {
-    //     service
-    //     .borrow()
-    //     .iter()
-    //     .filter_map(|(_, swipe_pool)| {
-    //         if swipe_pool.owner_id == id && swipe_pool.date == 
-    //     })
-    // });
 
+    let curr_date = Utc::now().naive_utc().date();
+    let mut already_generated = false;
+
+    let p: Blob<29> = Blob::from_bytes(std::borrow::Cow::Borrowed(&id));
+
+    let mut curr_swipe_pool: Option<SwipePool> = None;
+    
+    SWIPE_POOL_STORAGE.with(|service| {
+        for (_, swipe_pool) in service.borrow().iter() {
+            //belom di test -> masih nunggu ke generate dlu
+            if swipe_pool.owner_id == id && swipe_pool.date == curr_date.to_string(){
+                already_generated = true;
+                curr_swipe_pool = Some(swipe_pool);
+            }
+        }    
+    });
+
+    if already_generated == true {
+        return Result::Ok(Some(curr_swipe_pool.unwrap().user_ids))
+    }
+
+    //dummy
     return Result::Err(Error::NotFound { msg: "Invalid user ID".to_string() });
 }
 
