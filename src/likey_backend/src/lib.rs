@@ -6,6 +6,7 @@ use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemor
 use ic_stable_structures::storable::Blob;
 use ic_stable_structures::{BoundedStorable, DefaultMemoryImpl, StableBTreeMap, Storable, StableVec};
 use chrono::prelude::*;
+use std::collections::HashMap;
 // use serde::de::IntoDeserializer;
 // use std::ptr::null;
 use std::{borrow::Cow, cell::RefCell};
@@ -41,6 +42,7 @@ struct User {
     likey_coin: i32,
     current_swipe: i32,
     filter_access: bool,
+    swipe_filters: HashMap<String, FilterAttribute>
 }
 
 #[derive(candid::CandidType, Clone, Serialize, Deserialize, Default)]
@@ -143,7 +145,8 @@ struct UserPayload {
     photo_link: Vec<String>,
     likey_coin: i32,
     current_swipe: i32,
-    filter_access: bool
+    filter_access: bool,
+    swipe_filters: HashMap<String, FilterAttribute>
 }
 
 #[derive(candid::CandidType, Serialize, Deserialize, Default)]
@@ -161,6 +164,15 @@ struct UserProfilePayload {
 enum Error {
     NotFound { msg: String },
     InvalidPayloadData {msg: String}
+}
+#[derive(candid::CandidType, Deserialize, Serialize, Clone)]
+enum FilterAttribute {
+    Hobby {data: String},
+    Gender {data: String},
+    Education {data: i32},
+    Religion {data: String},
+    Height {data_start: i32, data_end: i32},
+    Age {data: i32}
 }
 
 // #[derive(candid::CandidType, Deserialize, Serialize)]
@@ -212,6 +224,7 @@ fn create_user(data: UserPayload) -> Result<Option<User>, Error> {
         likey_coin: 0,
         current_swipe: data.current_swipe,
         filter_access: data.filter_access,
+        swipe_filters: data.swipe_filters  
     };
 
     //insert new User
