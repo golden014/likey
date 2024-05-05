@@ -2,14 +2,24 @@ type Error = variant {
   NotFound : record { msg : text };
   InvalidPayloadData : record { msg : text };
 };
+type FilterAttribute = variant {
+  Age : record { data : int32 };
+  Height : record { data_start : int32; data_end : int32 };
+  Religion : record { data : text };
+  Hobby : record { data : text };
+  Gender : record { data : text };
+  Education : record { data : int32 };
+};
 type Result = variant { Ok : opt User; Err : Error };
-type Result_1 = variant { Ok : User; Err : Error };
+type Result_1 = variant { Ok : opt vec blob; Err : Error };
+type Result_2 = variant { Ok : User; Err : Error };
 type User = record {
   height : int32;
   profile_picture_link : text;
   current_swipe : int32;
   likey_coin : int32;
   education : int32;
+  swipe_filters : vec record { text; FilterAttribute };
   description : text;
   filter_access : bool;
   user_id : blob;
@@ -25,6 +35,7 @@ type UserPayload = record {
   current_swipe : int32;
   likey_coin : int32;
   education : int32;
+  swipe_filters : vec record { text; FilterAttribute };
   description : text;
   filter_access : bool;
   user_principal_id : blob;
@@ -45,7 +56,8 @@ type UserProfilePayload = record {
 };
 service : {
   create_user : (UserPayload) -> (Result);
-  get_user : (blob) -> (Result_1) query;
+  get_feeds : (blob) -> (Result_1);
+  get_user : (blob) -> (Result_2) query;
   greet : (text) -> (text) query;
-  update_user : (blob, UserProfilePayload) -> (Result_1);
+  update_user : (blob, UserProfilePayload) -> (Result_2);
 }
