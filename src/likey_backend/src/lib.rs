@@ -21,6 +21,7 @@ use std::{self, result};
 
 //module generate swipe
 pub mod generate_swipe;
+pub mod date_helper;
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 // type IdCell = Cell<u64, Memory>;
@@ -166,8 +167,8 @@ enum Error {
 }
 #[derive(candid::CandidType, Deserialize, Serialize, Clone)]
 enum FilterAttribute {
-    Hobby {data: String},
-    Gender {data: String},
+    // Hobby {data: String},
+    Gender {data: String}, 
     Education {data: i32},
     Religion {data: String},
     Height {data_start: i32, data_end: i32},
@@ -297,104 +298,14 @@ fn _get_user(id: &Vec<u8>) -> Option<User> {
 //Greet
 #[ic_cdk::query]
 fn greet(name: String) -> String {
-    // // // Get the current system time
-    // let current_time = SystemTime::now();
-
-    // // Convert system time to a Duration since the UNIX epoch
-    // let duration_since_epoch = current_time.duration_since(UNIX_EPOCH).expect("Time went backwards");
-
-    // // Convert duration to seconds
-    // let seconds = duration_since_epoch.as_secs();
-
-    // // Convert seconds to a format string
-    // let date_string = format_timestamp(seconds);
-    
-    // format!("Current time in date string format: {}", date_string)
-    // let curr_date = Utc::now().naive_utc().date();
-    // curr_date.to_string()
-
-    let nanoseconds_since_epoch = time();
-
-    // Convert nanoseconds to seconds
-    let seconds_since_epoch = nanoseconds_since_epoch / 1_000_000_000;
-
-    // Create a Duration representing the time since the UNIX epoch
-    let duration = Duration::new(seconds_since_epoch as u64, 0);
-
-    // Calculate the current date and time
-    let (year, month, day, hour, minute, second) = calculate_date_time(duration);
-
-    // Format the date and time components into a string
-    let formatted_time = format!("{}-{:02}-{:02} {:02}:{:02}:{:02}", year, month, day, hour, minute, second);
-
-    format!("Formatted time: {}", formatted_time)
-
+    format!("Hello : {}", name)
 }
 
-fn calculate_date_time(duration: Duration) -> (i64, u32, u32, u32, u32, u32) {
-    // Calculate the number of seconds since the UNIX epoch
-    let seconds = duration.as_secs();
-
-    // Calculate the number of days
-    let days = seconds / (24 * 3600);
-
-    // Calculate the number of remaining seconds after removing the days
-    let remaining_seconds = seconds % (24 * 3600);
-
-    // Calculate the number of hours
-    let hours = remaining_seconds / 3600;
-
-    // Calculate the number of remaining seconds after removing the hours
-    let remaining_seconds = remaining_seconds % 3600;
-
-    // Calculate the number of minutes
-    let minutes = remaining_seconds / 60;
-
-    // Calculate the number of remaining seconds after removing the minutes
-    let seconds = remaining_seconds % 60;
-
-    // Calculate the year, month, and day based on the number of days
-    let mut year = 1970;
-    let mut days_left = days;
-    let mut month = 1;
-    let mut day = 1;
-
-    while days_left >= 365 {
-        let is_leap_year = year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
-        let days_in_year = if is_leap_year { 366 } else { 365 };
-
-        if days_left >= days_in_year {
-            year += 1;
-            days_left -= days_in_year;
-        } else {
-            break;
-        }
-    }
-    let days_in_month = [31, if year % 4 == 0 { 29 } else { 28 }, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-
-    for (i, days_in_current_month) in days_in_month.iter().enumerate() {
-        if days_left >= *days_in_current_month as u64 {
-            month += 1;
-            days_left -= *days_in_current_month as u64;
-        } else {
-            day += days_left as u32;
-            break;
-        }
-    }
-
-    (year, month, day, hours as u32, minutes as u32, seconds as u32)
+#[ic_cdk::query]
+fn test_date() -> String {
+    date_helper::get_current_date_time()
 }
 
-// fn format_timestamp(seconds: u64) -> String {
-//     // Convert seconds since UNIX epoch to a PrimitiveDateTime
-//     let datetime = PrimitiveDateTime::unix_epoch() + Duration::seconds(seconds as i64);
-
-//     // Define the format string for the desired date format
-//     let format_string = "%Y-%m-%d %H:%M:%S";
-
-//     // Format the PrimitiveDateTime as a date string
-//     datetime.format(format_string)
-// }
 
 #[ic_cdk::query]
 fn get_user(id: Vec<u8>) -> Result<User, Error> {
@@ -435,27 +346,31 @@ fn get_feeds(id: Vec<u8>) -> Result<Option<Vec<Vec<u8>>>, Error> {
 
     //check if the feeds for the user for today's date already generated or not
 
-    // let curr_date = Utc::now().naive_utc().date();
-    // let mut already_generated = false;
+    //date format = yyyy-mm-dd
+    let curr_date = date_helper::get_current_date();
+    let mut already_generated = false;
 
     // let p: Blob<29> = Blob::from_bytes(std::borrow::Cow::Borrowed(&id));
 
-    // let mut curr_swipe_pool: Option<SwipePool> = None;
+    let mut curr_swipe_pool: Option<SwipePool> = None;
     
-    // SWIPE_POOL_STORAGE.with(|service| {
-    //     for (_, swipe_pool) in service.borrow().iter() {
-    //         //belom di test -> masih nunggu ke generate dlu
-    //         if swipe_pool.owner_id == id && swipe_pool.date == curr_date.to_string(){
-    //             already_generated = true;
-    //             curr_swipe_pool = Some(swipe_pool);
-    //         }
-    //     }    
-    // });
+    SWIPE_POOL_STORAGE.with(|service| {
+        for (_, swipe_pool) in service.borrow().iter() {
+            //belom di test -> masih nunggu ke generate dlu
+            if swipe_pool.owner_id == id && swipe_pool.date == curr_date.to_string(){
+                already_generated = true;
+                curr_swipe_pool = Some(swipe_pool);
+            }
+        }    
+    });
 
-    // if already_generated == true {
-    //     return Result::Ok(Some(curr_swipe_pool.unwrap().user_ids))
-    // }
+    //if user's swipe pool already generated that day
+    if already_generated == true {
+        return Result::Ok(Some(curr_swipe_pool.unwrap().user_ids))
+    }
 
+    //else: generate user's swipe pool
+    
     //dummy
     return Result::Err(Error::NotFound { msg: "Invalid user ID".to_string() });
 }

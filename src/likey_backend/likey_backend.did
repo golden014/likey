@@ -59,5 +59,6 @@ service : {
   get_feeds : (blob) -> (Result_1);
   get_user : (blob) -> (Result_2) query;
   greet : (text) -> (text) query;
+  test_date : () -> (text) query;
   update_user : (blob, UserProfilePayload) -> (Result_2);
 }
