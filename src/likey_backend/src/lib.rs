@@ -39,7 +39,8 @@ struct User {
     likey_coin: i32,
     current_swipe: i32,
     filter_access: bool,
-    swipe_filters: HashMap<String, FilterAttribute>
+    swipe_filters: HashMap<String, FilterAttribute>,
+    dob: String
     //TODO : tambahin attribute last time reset current swipe
 }
 
@@ -144,7 +145,8 @@ struct UserPayload {
     likey_coin: i32,
     current_swipe: i32,
     filter_access: bool,
-    swipe_filters: HashMap<String, FilterAttribute>
+    swipe_filters: HashMap<String, FilterAttribute>,
+    dob: String
 }
 
 #[derive(candid::CandidType, Serialize, Deserialize, Default)]
@@ -170,7 +172,7 @@ enum FilterAttribute {
     Education {data: i32},
     Religion {data: String},
     Height {data_start: i32, data_end: i32},
-    Age {data: i32}
+    Age {data_start: i32, data_end: i32}
 }
 
 // #[derive(candid::CandidType, Deserialize, Serialize)]
@@ -222,7 +224,8 @@ fn create_user(data: UserPayload) -> Result<Option<User>, Error> {
         likey_coin: 0,
         current_swipe: data.current_swipe,
         filter_access: data.filter_access,
-        swipe_filters: data.swipe_filters  
+        swipe_filters: data.swipe_filters,
+        dob: data.dob
     };
 
     //insert new User
@@ -291,6 +294,12 @@ fn _get_user(id: &Vec<u8>) -> Option<User> {
 //         return Ok(a.first().unwrap().clone())
 //     }
 // }
+
+#[ic_cdk::query]
+fn test_get_age(dob: String) -> i32 {
+    date_helper::get_age(&dob)
+}
+
 
 #[ic_cdk::query]
 fn generate_swipe_by_id(id: Vec<u8>) -> Result<Option<Vec<Vec<u8>>>, Error> {

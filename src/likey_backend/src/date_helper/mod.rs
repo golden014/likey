@@ -32,6 +32,32 @@ pub(crate) fn get_current_date() -> String {
     formatted_time
 }
 
+pub(crate) fn get_age(dob: &String) -> i32 {
+    let curr_date = get_current_date();
+
+    // Parse the start and end dates
+    let dob_parts: Vec<&str> = dob.split('-').collect();
+    let curr_date_parts: Vec<&str> = curr_date.split('-').collect();
+    
+    let dob_year = dob_parts[0].parse::<i32>().unwrap();
+    let dob_month = dob_parts[1].parse::<i32>().unwrap();
+    let dob_day = dob_parts[2].parse::<i32>().unwrap();
+
+    let curr_date_year = curr_date_parts[0].parse::<i32>().unwrap();
+    let curr_date_month = curr_date_parts[1].parse::<i32>().unwrap();
+    let curr_date_day = curr_date_parts[2].parse::<i32>().unwrap();
+
+    //calculate the difference in years
+    let mut year_diff = curr_date_year - dob_year;
+
+    //adjust the difference if necessary based on month and day
+    if curr_date_month < dob_month || (curr_date_month == dob_month && curr_date_day < dob_day) {
+        year_diff -= 1;
+    }
+
+    year_diff
+}
+
 fn calculate_date_time(duration: Duration) -> (i64, u32, u32, u32, u32, u32) {
     // Calculate the number of seconds since the UNIX epoch
     let seconds = duration.as_secs();
@@ -85,3 +111,4 @@ fn calculate_date_time(duration: Duration) -> (i64, u32, u32, u32, u32, u32) {
 
     (year, month, day, hours as u32, minutes as u32, seconds as u32)
 }
+
