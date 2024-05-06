@@ -6,7 +6,6 @@ type FilterAttribute = variant {
   Age : record { data : int32 };
   Height : record { data_start : int32; data_end : int32 };
   Religion : record { data : text };
-  Hobby : record { data : text };
   Gender : record { data : text };
   Education : record { data : int32 };
 };

@@ -4,6 +4,7 @@ import { enc, dec } from "./cryptController";
 
 
 export const getUserDataFromDB = async (id : number[]) => {
+    console.log(id)
     const data = await likey_backend.get_user(id)
 
     if(data != null){
