@@ -5,10 +5,8 @@ use candid::{Decode, Encode};
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
 use ic_stable_structures::storable::Blob;
 use ic_stable_structures::{BoundedStorable, DefaultMemoryImpl, StableBTreeMap, Storable, StableVec};
-use ic_cdk::api::time;
 use std::collections::HashMap;
 
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
 // use std::time::{SystemTime, UNIX_EPOCH};
 // use time::{PrimitiveDateTime, Duration};
 // use serde::de::IntoDeserializer;
@@ -16,7 +14,7 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use std::{borrow::Cow, cell::RefCell};
 // use regex::Regex;
 
-use std::{self, result};
+use std::{self};
 
 
 //module generate swipe
@@ -294,6 +292,10 @@ fn _get_user(id: &Vec<u8>) -> Option<User> {
 //     }
 // }
 
+#[ic_cdk::query]
+fn generate_swipe_by_id(id: Vec<u8>) -> Result<Option<Vec<Vec<u8>>>, Error> {
+    generate_swipe::generate_swipe(id)
+}
 
 //Greet
 #[ic_cdk::query]
@@ -350,8 +352,6 @@ fn get_feeds(id: Vec<u8>) -> Result<Option<Vec<Vec<u8>>>, Error> {
     let curr_date = date_helper::get_current_date();
     let mut already_generated = false;
 
-    // let p: Blob<29> = Blob::from_bytes(std::borrow::Cow::Borrowed(&id));
-
     let mut curr_swipe_pool: Option<SwipePool> = None;
     
     SWIPE_POOL_STORAGE.with(|service| {
@@ -374,6 +374,21 @@ fn get_feeds(id: Vec<u8>) -> Result<Option<Vec<Vec<u8>>>, Error> {
     //dummy
     return Result::Err(Error::NotFound { msg: "Invalid user ID".to_string() });
 }
+
+#[ic_cdk::update]
+fn update_swipe_filter(id: Vec<u8>, filter_attribute: HashMap<String, FilterAttribute>) -> Result<Option<HashMap<String, FilterAttribute>>, Error> {
+    let user = _get_user(&id);
+
+    match user {
+        Some(mut user) => {
+            user.swipe_filters = filter_attribute;
+            do_insert_user(&user);
+            return Result::Ok(Some(user.swipe_filters))
+        },
+        None => return Result::Err(Error::InvalidPayloadData { msg: "Invalid user id".to_string() }),
+    }
+}
+
 
 
 ic_cdk::export_candid!();

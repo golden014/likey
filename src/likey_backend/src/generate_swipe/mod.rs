@@ -9,7 +9,7 @@ use crate::{Error, FilterAttribute, User, _get_user, HOBBY_STORAGE, USER_STORAGE
 
 
 
-fn generate_swipe(user_id: Vec<u8>) -> Result<Option<Vec<Vec<u8>>>, Error>{
+pub(crate) fn generate_swipe(user_id: Vec<u8>) -> Result<Option<Vec<Vec<u8>>>, Error>{
 
     let curr_user = _get_user(&user_id);
 
@@ -31,7 +31,7 @@ fn generate_swipe(user_id: Vec<u8>) -> Result<Option<Vec<Vec<u8>>>, Error>{
 
     let filters_from_user_object: Vec<(Blob<29>, User)> =  USER_STORAGE.with(|s| {
         s.borrow().iter().filter(|(_id, user)| {
-            swipe_filters.iter().all(|(key, value)| match value {
+            swipe_filters.iter().all(|(_key, value)| match value {
 
                 FilterAttribute::Gender{ data } => {
                     data.is_empty() || user.gender == *data
@@ -57,13 +57,15 @@ fn generate_swipe(user_id: Vec<u8>) -> Result<Option<Vec<Vec<u8>>>, Error>{
         }).collect::<Vec<_>>()
     });
 
+    let vec_without_user: Vec<Vec<u8>> = filters_from_user_object.into_iter().map(|(_, user)| user.user_id).collect();
+
     
     //dari object hobby
     
 
     
     //TODO: bikin filter nya utk religion, age, dll
-    return Result::Ok(None);
+    return Result::Ok(Some(vec_without_user));
 
 }
 
