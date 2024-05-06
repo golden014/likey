@@ -3,7 +3,7 @@ type Error = variant {
   InvalidPayloadData : record { msg : text };
 };
 type FilterAttribute = variant {
-  Age : record { data : int32 };
+  Age : record { data_start : int32; data_end : int32 };
   Height : record { data_start : int32; data_end : int32 };
   Religion : record { data : text };
   Gender : record { data : text };
@@ -12,7 +12,12 @@ type FilterAttribute = variant {
 type Result = variant { Ok : opt User; Err : Error };
 type Result_1 = variant { Ok : opt vec blob; Err : Error };
 type Result_2 = variant { Ok : User; Err : Error };
+type Result_3 = variant {
+  Ok : opt vec record { text; FilterAttribute };
+  Err : Error;
+};
 type User = record {
+  dob : text;
   height : int32;
   profile_picture_link : text;
   current_swipe : int32;
@@ -29,6 +34,7 @@ type User = record {
   photo_link : vec text;
 };
 type UserPayload = record {
+  dob : text;
   height : int32;
   profile_picture_link : text;
   current_swipe : int32;
@@ -55,9 +61,14 @@ type UserProfilePayload = record {
 };
 service : {
   create_user : (UserPayload) -> (Result);
+  generate_swipe_by_id : (blob) -> (Result_1) query;
   get_feeds : (blob) -> (Result_1);
   get_user : (blob) -> (Result_2) query;
   greet : (text) -> (text) query;
   test_date : () -> (text) query;
+  test_get_age : (text) -> (int32) query;
+  update_swipe_filter : (blob, vec record { text; FilterAttribute }) -> (
+      Result_3,
+    );
   update_user : (blob, UserProfilePayload) -> (Result_2);
 }

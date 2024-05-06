@@ -5,11 +5,10 @@
 
 use ic_stable_structures::storable::Blob;
 
-use crate::{Error, FilterAttribute, User, _get_user, HOBBY_STORAGE, USER_STORAGE};
+use crate::{Error, FilterAttribute, User, _get_user, date_helper::get_age, HOBBY_STORAGE, USER_STORAGE};
 
 
-
-fn generate_swipe(user_id: Vec<u8>) -> Result<Option<Vec<Vec<u8>>>, Error>{
+pub(crate) fn generate_swipe(user_id: Vec<u8>) -> Result<Option<Vec<Vec<u8>>>, Error>{
 
     let curr_user = _get_user(&user_id);
 
@@ -31,7 +30,7 @@ fn generate_swipe(user_id: Vec<u8>) -> Result<Option<Vec<Vec<u8>>>, Error>{
 
     let filters_from_user_object: Vec<(Blob<29>, User)> =  USER_STORAGE.with(|s| {
         s.borrow().iter().filter(|(_id, user)| {
-            swipe_filters.iter().all(|(key, value)| match value {
+            swipe_filters.iter().all(|(_key, value)| match value {
 
                 FilterAttribute::Gender{ data } => {
                     data.is_empty() || user.gender == *data
@@ -50,12 +49,17 @@ fn generate_swipe(user_id: Vec<u8>) -> Result<Option<Vec<Vec<u8>>>, Error>{
                     (*data_start == 0 && *data_end == 0) || (user.height >= *data_start && user.height <= *data_end)
                 },
 
-                FilterAttribute::Age { data } => {
-                    *data == 0 || user.education == *data
+                FilterAttribute::Age {data_start, data_end } => {
+                    (*data_start == 0 && *data_end == 0) || {
+                        let dob = user.dob.clone();
+                        get_age(&dob) >= *data_start && get_age(&dob) <= *data_end
+                    }
                 },
             })
         }).collect::<Vec<_>>()
     });
+
+    let vec_without_user: Vec<Vec<u8>> = filters_from_user_object.into_iter().map(|(_, user)| user.user_id).collect();
 
     
     //dari object hobby
@@ -63,7 +67,7 @@ fn generate_swipe(user_id: Vec<u8>) -> Result<Option<Vec<Vec<u8>>>, Error>{
 
     
     //TODO: bikin filter nya utk religion, age, dll
-    return Result::Ok(None);
+    return Result::Ok(Some(vec_without_user));
 
 }
 
