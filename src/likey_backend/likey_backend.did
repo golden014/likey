@@ -10,15 +10,28 @@ type FilterAttribute = variant {
   Education : record { data : int32 };
 };
 type Hobby = record { name : text; user_id : blob };
-type Result = variant { Ok : opt User; Err : Error };
-type Result_1 = variant { Ok : opt vec blob; Err : Error };
-type Result_2 = variant { Ok : User; Err : Error };
-type Result_3 = variant { Ok : opt Hobby; Err : Error };
-type Result_4 = variant {
+type Interest = record {
+  user_id_source : blob;
+  user_id_destination : blob;
+  is_interested : bool;
+  is_revealed : bool;
+};
+type Result = variant { Ok : opt Interest; Err : Error };
+type Result_1 = variant { Ok : opt User; Err : Error };
+type Result_2 = variant { Ok : opt vec blob; Err : Error };
+type Result_3 = variant { Ok : User; Err : Error };
+type Result_4 = variant { Ok : opt Hobby; Err : Error };
+type Result_5 = variant {
   Ok : opt vec record { text; FilterAttribute };
   Err : Error;
 };
 type UpdateHobbyPayload = record { name : text; user_id : blob };
+type UpdateInterestPayload = record {
+  user_id_source : blob;
+  user_id_destination : blob;
+  is_interested : bool;
+  is_revealed : bool;
+};
 type User = record {
   dob : text;
   height : int32;
@@ -63,16 +76,17 @@ type UserProfilePayload = record {
   religion : text;
 };
 service : {
-  create_user : (UserPayload) -> (Result);
-  generate_swipe_by_id : (blob) -> (Result_1) query;
-  get_feeds : (blob) -> (Result_1);
-  get_user : (blob) -> (Result_2) query;
+  add_interest : (UpdateInterestPayload) -> (Result);
+  create_user : (UserPayload) -> (Result_1);
+  generate_swipe_by_id : (blob) -> (Result_2) query;
+  get_feeds : (blob) -> (Result_2);
+  get_user : (blob) -> (Result_3) query;
   greet : (text) -> (text) query;
   test_date : () -> (text) query;
   test_get_age : (text) -> (int32) query;
-  update_hobby : (UpdateHobbyPayload) -> (Result_3);
+  update_hobby : (UpdateHobbyPayload) -> (Result_4);
   update_swipe_filter : (blob, vec record { text; FilterAttribute }) -> (
-      Result_4,
+      Result_5,
     );
-  update_user : (blob, UserProfilePayload) -> (Result_2);
+  update_user : (blob, UserProfilePayload) -> (Result_3);
 }

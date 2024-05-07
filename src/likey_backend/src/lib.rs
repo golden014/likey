@@ -193,6 +193,15 @@ struct UpdateHobbyPayload {
     name: String
 }
 
+//update interest (swiping)
+#[derive(candid::CandidType, Serialize, Deserialize, Default)]
+struct UpdateInterestPayload {
+    user_id_source: Vec<u8>,
+    user_id_destination: Vec<u8>,
+    is_interested: bool,
+    is_revealed: bool
+}
+
 #[derive(candid::CandidType, Deserialize, Serialize)]
 enum Error {
     NotFound { msg: String },
@@ -206,6 +215,25 @@ enum FilterAttribute {
     Religion {data: String},
     Height {data_start: i32, data_end: i32},
     Age {data_start: i32, data_end: i32}
+}
+
+//add interest -> update swiping
+#[ic_cdk::update]
+fn add_interest(data: UpdateInterestPayload) -> Result<Option<Interest>, Error> {
+    
+    let user_source = _get_user(&data.user_id_source);
+    let user_destination = _get_user(&data.user_id_destination);
+
+    if user_source.is_none() || user_destination.is_none() {
+        return Err(Error::InvalidPayloadData { msg: "invalid user id".to_string() });
+    }
+
+    let new_interest = Interest { user_id_source: data.user_id_source, user_id_destination: data.user_id_destination, is_interested: false, is_revealed: false };
+
+    match INTEREST_STORAGE.with(|service| service.borrow_mut().push(&new_interest)) {
+        Ok(_) => Ok(Some(new_interest)),
+        Err(_) => Err(Error::NotFound { msg: "Error adding new interest".to_string() })
+    }
 }
 
 #[ic_cdk::update]
