@@ -51,10 +51,18 @@ struct SwipePool {
     date: String
 }
 
-#[derive(candid::CandidType, Clone, Serialize, Deserialize, Default)]
+#[derive(candid::CandidType, Clone, Serialize, Deserialize, Default, PartialEq, Eq)]
 struct Hobby {
     user_id: Vec<u8>,
     name: String,
+}
+
+#[derive(candid::CandidType, Clone, Serialize, Deserialize, Default)]
+struct Interest {
+    user_id_source: Vec<u8>,
+    user_id_destination: Vec<u8>,
+    is_interested: bool,
+    is_revealed: bool
 }
 
 impl Storable for User {
@@ -87,6 +95,16 @@ impl Storable for Hobby {
     }
 }
 
+impl Storable for Interest {
+    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
+        Cow::Owned(Encode!(self).unwrap())
+    }
+
+    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
+        Decode!(bytes.as_ref(), Self).unwrap()
+    }
+}
+
 impl BoundedStorable for User {
     const MAX_SIZE: u32 = 1024;
     const IS_FIXED_SIZE: bool = false;
@@ -98,6 +116,11 @@ impl BoundedStorable for SwipePool {
 }
 
 impl BoundedStorable for Hobby {
+    const MAX_SIZE: u32 = 1024;
+    const IS_FIXED_SIZE: bool = false;
+}
+
+impl BoundedStorable for Interest {
     const MAX_SIZE: u32 = 1024;
     const IS_FIXED_SIZE: bool = false;
 }
@@ -128,6 +151,10 @@ thread_local! {
             MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(3)))
     ).unwrap_or_else(|_| panic!("Failed to initialize Hobby Storage")));
 
+    static INTEREST_STORAGE: RefCell<StableVec<Interest, Memory>> = 
+        RefCell::new(StableVec::init(
+            MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(4)))
+    ).unwrap_or_else(|_| panic!("Failed to initialize Hobby Storage")));
 }
 
 #[derive(candid::CandidType, Serialize, Deserialize, Default)]
@@ -160,6 +187,12 @@ struct UserProfilePayload {
     profile_picture_link: String
 }
 
+#[derive(candid::CandidType, Serialize, Deserialize, Default)]
+struct UpdateHobbyPayload {
+    user_id: Vec<u8>,
+    name: String
+}
+
 #[derive(candid::CandidType, Deserialize, Serialize)]
 enum Error {
     NotFound { msg: String },
@@ -175,40 +208,63 @@ enum FilterAttribute {
     Age {data_start: i32, data_end: i32}
 }
 
-// #[derive(candid::CandidType, Deserialize, Serialize)]
-// enum UniqueAttribue{
-//     UserEmail
-// }
+#[ic_cdk::update]
+fn update_hobby(data: UpdateHobbyPayload) -> Result<Option<Hobby>, Error> {
+    //check if the hobby of the user already exist or not
+    let hobby = hobby_exist(&data);
 
-// fn attribute_unique_validation(data: &String, attribute: UniqueAttribue) -> bool {
-//     let is_unique: bool = !USER_STORAGE.with(|s| {
-//         s.borrow().iter().any(|(_, user_data)| {
-//             match attribute {
-//                 UniqueAttribue::UserEmail => user_data.user_email == *data,
-//             }
-//         })
-//     });
+    match hobby {
+        //if it exists, delete the hobby and return none
+        Some(hobby) => {
+            let index = HOBBY_STORAGE.with(|s| {
+                s.borrow().iter().position(|h| h == hobby)
+            });
 
-//     is_unique
-// }
+            if let Some(index) = index {
+                HOBBY_STORAGE.with(|s| {
+                    //ambil index terakhir
+                    let last_index_hobby = s.borrow_mut().get(s.borrow().len() - 1);
+
+                    match last_index_hobby {
+                        //kalau index terakhir ada isinya
+                        Some(last_index_hobby) => {
+                            //set hobby di index yg match dengan hobby di idx terakhir
+                            s.borrow_mut().set(index.try_into().unwrap(), &last_index_hobby);
+                            //pop last index hobby
+                            s.borrow_mut().pop()
+                        },
+                        None => None,
+                    }
+                });
+            } else {
+                return Err(Error::NotFound { msg: "index of hobby not found".to_string() });
+            }
+
+            Ok(None)
+        },
+      
+        //else, insert the new hobby to the hobby storage
+        None => {
+            let new_hobby: Hobby = Hobby { user_id: data.user_id, name: data.name };
+            match HOBBY_STORAGE.with(|service| service.borrow_mut().push(&new_hobby)) {
+                Ok(_) => Ok(Some(new_hobby)),
+                Err(_) => Err(Error::NotFound { msg: "error while inserting new hobby".to_string() })
+            }
+        },
+    }
+}
+
+fn hobby_exist(data: &UpdateHobbyPayload) -> Option<Hobby> {
+    HOBBY_STORAGE.with(|s| {
+        s.borrow().iter().find(|hobby| {
+            hobby.user_id == data.user_id && hobby.name == data.name
+        })
+    })
+}
+
 
 #[ic_cdk::update]
 fn create_user(data: UserPayload) -> Result<Option<User>, Error> {
-
-    //validate new user's data
-    // let user_data_valid = create_user_validation(&data);
-
-    // if user_data_valid == false {
-    //     return Result::Err(Error::InvalidPayloadData { msg: "Invalid data, make sure the email is in valid format, email and username must be unique".to_string() })
-    // }
-
-    //get the new id
-    // let id = USER_ID_COUNTER
-    //     .with(|counter| {
-    //         let current_value = *counter.borrow().get();
-    //         counter.borrow_mut().set(current_value + 1)
-    //     })
-    //     .expect("cannot increment id counter");
 
     let new_user = User {
         user_id: data.user_principal_id,
@@ -238,21 +294,6 @@ fn create_user(data: UserPayload) -> Result<Option<User>, Error> {
 
 }
 
-// fn create_user_validation(data: &UserPayload) -> bool {
-//     //email format validation using regex
-//     let email_format = Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$").unwrap();
-
-//     //check if the email matches the regex
-//     let email_format_valid = email_format.is_match(&data.user_email);
-
-    
-//     //check if email and username is unique
-//     let email_unique = attribute_unique_validation(&data.user_email, UniqueAttribue::UserEmail); 
-    
-
-//     return email_format_valid && email_unique;
-// }
-
 fn do_insert_user(data: &User) -> bool {
     let p = Blob::from_bytes(std::borrow::Cow::Borrowed(&data.user_id));
     let a = USER_STORAGE.with(|service| service.borrow_mut().insert(p, data.clone()));
@@ -266,34 +307,6 @@ fn _get_user(id: &Vec<u8>) -> Option<User> {
     let p = Blob::from_bytes(std::borrow::Cow::Borrowed(id));
     USER_STORAGE.with(|service| service.borrow().get(&p))
 }
-
-// fn _get_user_by_principal_id(principal_id:Vec<u8>) -> Vec<User> {
-//     USER_STORAGE.with(|us| {
-//         us
-//         .borrow()
-//         .iter()
-//         .filter_map(|(_,user)| {
-//             if user.user_principal_id == *principal_id {
-//                 Some(user.clone())
-//             } else{
-//                 None
-//             }
-//         }).collect()
-//     })
-// }
-
-// #[ic_cdk::query]
-// fn get_user_by_principal_id(principal_id:Vec<u8>) -> Result<User, Error> {
-//     let a = _get_user_by_principal_id(principal_id);
-//     if a.len() == 0{
-//         return  Err(Error::NotFound {
-//             msg: format!("not found"),
-//         })
-//     }
-//     else {
-//         return Ok(a.first().unwrap().clone())
-//     }
-// }
 
 #[ic_cdk::query]
 fn test_get_age(dob: String) -> i32 {

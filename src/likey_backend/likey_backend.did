@@ -9,13 +9,16 @@ type FilterAttribute = variant {
   Gender : record { data : text };
   Education : record { data : int32 };
 };
+type Hobby = record { name : text; user_id : blob };
 type Result = variant { Ok : opt User; Err : Error };
 type Result_1 = variant { Ok : opt vec blob; Err : Error };
 type Result_2 = variant { Ok : User; Err : Error };
-type Result_3 = variant {
+type Result_3 = variant { Ok : opt Hobby; Err : Error };
+type Result_4 = variant {
   Ok : opt vec record { text; FilterAttribute };
   Err : Error;
 };
+type UpdateHobbyPayload = record { name : text; user_id : blob };
 type User = record {
   dob : text;
   height : int32;
@@ -67,8 +70,9 @@ service : {
   greet : (text) -> (text) query;
   test_date : () -> (text) query;
   test_get_age : (text) -> (int32) query;
+  update_hobby : (UpdateHobbyPayload) -> (Result_3);
   update_swipe_filter : (blob, vec record { text; FilterAttribute }) -> (
-      Result_3,
+      Result_4,
     );
   update_user : (blob, UserProfilePayload) -> (Result_2);
 }
