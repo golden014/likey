@@ -13,7 +13,7 @@ export interface RegisterDataType{
 }
 
 export interface UserData{
-    user_id: number,
+    user_id: number[],
     email: string,
     first_name: string,
     last_name: string,
@@ -41,4 +41,14 @@ export interface Chat{
             nanoseconds : number
         }
     }]
+}
+
+export interface UpdateUserPayload{
+    first_name: string,
+    last_name: string,
+    height: number,
+    education: number,
+    religion: string,
+    description: string,
+    profile_picture_link: string
 }

@@ -60,14 +60,17 @@ const LoginPage = () =>{
         const authClient = await AuthClient.create(defaultOptions.createOptions);
         
         // console.log(authClient.getIdentity().getPrincipal())
-        const user = await getUserDataFromDB(Array.from(authClient.getIdentity().getPrincipal().toUint8Array()))
+        
         // console.log(user)
         if (await authClient.isAuthenticated()) {
-        //     router.push('/home')
+            console.log("dah ada")
+            const user = await getUserDataFromDB(Array.from(authClient.getIdentity().getPrincipal().toUint8Array()))
+            router.push('/explore')
         }else{
             authClient.login(defaultOptions.loginOptions).then(async ()=>{
         //         const user = await getUserDataFromDB(authClient.getIdentity().getPrincipal().toString())
-                
+            const user = await getUserDataFromDB(Array.from(authClient.getIdentity().getPrincipal().toUint8Array()))
+            router.push('/explore')
 
         //         const user = await likey_backend.get_user(authClient.getIdentity().getPrincipal())
         //         if (user !== null) {
