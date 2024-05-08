@@ -195,11 +195,25 @@ struct UpdateHobbyPayload {
 
 //update interest (swiping)
 #[derive(candid::CandidType, Serialize, Deserialize, Default)]
-struct UpdateInterestPayload {
+struct AddInterestPayload {
     user_id_source: Vec<u8>,
     user_id_destination: Vec<u8>,
     is_interested: bool,
     is_revealed: bool
+}
+
+#[derive(candid::CandidType, Serialize, Deserialize, Default)]
+struct UpdateIsInterestedPayload {
+    user_id_source: Vec<u8>,
+    user_id_destination: Vec<u8>,
+    is_interested: bool,
+}
+
+#[derive(candid::CandidType, Serialize, Deserialize, Default)]
+struct UpdateIsRevealedPayload {
+    user_id_source: Vec<u8>,
+    user_id_destination: Vec<u8>,
+    is_revealed: bool,
 }
 
 #[derive(candid::CandidType, Deserialize, Serialize)]
@@ -217,10 +231,9 @@ enum FilterAttribute {
     Age {data_start: i32, data_end: i32}
 }
 
-//add interest -> update swiping
+//add interest -> swiping
 #[ic_cdk::update]
-fn add_interest(data: UpdateInterestPayload) -> Result<Option<Interest>, Error> {
-    
+fn add_interest(data: AddInterestPayload) -> Result<Option<Interest>, Error> {
     let user_source = _get_user(&data.user_id_source);
     let user_destination = _get_user(&data.user_id_destination);
 
@@ -228,13 +241,46 @@ fn add_interest(data: UpdateInterestPayload) -> Result<Option<Interest>, Error> 
         return Err(Error::InvalidPayloadData { msg: "invalid user id".to_string() });
     }
 
-    let new_interest = Interest { user_id_source: data.user_id_source, user_id_destination: data.user_id_destination, is_interested: false, is_revealed: false };
+    let new_interest = Interest { user_id_source: data.user_id_source, user_id_destination: data.user_id_destination, is_interested: data.is_interested, is_revealed: false };
 
     match INTEREST_STORAGE.with(|service| service.borrow_mut().push(&new_interest)) {
         Ok(_) => Ok(Some(new_interest)),
         Err(_) => Err(Error::NotFound { msg: "Error adding new interest".to_string() })
     }
 }
+
+// #[ic_cdk::update]
+// fn update_interest(data: UpdateInterestPayload) -> Result<Option<Interest>, Error> {
+
+   
+// }
+
+// #[ic_cdk::update]
+// fn update_reveal(data: UpdateIsRevealedPayload) -> Result<Option<Interest>, Error> {
+
+// }
+
+//to update is_interested
+// fn update_interest(data: &UpdateIsInterestPayload) -> Option<Interest>{
+
+//      //get index of interest with the same user source & user dest
+//     let index: Option<usize> = INTEREST_STORAGE.with(|s| {
+//         s.borrow().iter().position(|i: Interest| {
+//             (i.user_id_source == data.user_id_source) && (i.user_id_destination == data.user_id_destination)
+//         })
+//     });
+
+//     //jika index ketemu, update object di position tersebut dengan updated interest
+//     match index {
+//         Some(index) => {
+//             let updated_interest = Interest { user_id_source: data.user_id_source, user_id_destination: data.user_id_destination, is_interested: data.is_interested, is_revealed: data.is_revealed };
+//             INTEREST_STORAGE.with(|s| s.borrow_mut().set(index.try_into().unwrap(), &updated_interest));
+//             return Ok(Some(updated_interest));
+//         },
+//         None => return Err(Error::InvalidPayloadData { msg: "invalid user id".to_string() })
+//     }
+// }
+
 
 #[ic_cdk::update]
 fn update_hobby(data: UpdateHobbyPayload) -> Result<Option<Hobby>, Error> {
@@ -270,7 +316,6 @@ fn update_hobby(data: UpdateHobbyPayload) -> Result<Option<Hobby>, Error> {
 
             Ok(None)
         },
-      
         //else, insert the new hobby to the hobby storage
         None => {
             let new_hobby: Hobby = Hobby { user_id: data.user_id, name: data.name };
@@ -280,6 +325,20 @@ fn update_hobby(data: UpdateHobbyPayload) -> Result<Option<Hobby>, Error> {
             }
         },
     }
+}
+
+#[ic_cdk::query]
+fn get_all_hobby_by_user_id(user_id: Vec<u8>) -> Vec<Hobby> {
+    let mut output: Vec<Hobby> = Vec::new();
+
+    HOBBY_STORAGE.with(|s| {
+        for i in s.borrow().iter() {
+            if i.user_id == user_id {
+                output.push(i)
+            }
+        }
+    });
+    output
 }
 
 fn hobby_exist(data: &UpdateHobbyPayload) -> Option<Hobby> {

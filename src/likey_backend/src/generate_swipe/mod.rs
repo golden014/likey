@@ -5,7 +5,7 @@
 
 use ic_stable_structures::storable::Blob;
 
-use crate::{Error, FilterAttribute, User, _get_user, date_helper::get_age, HOBBY_STORAGE, USER_STORAGE};
+use crate::{Error, FilterAttribute, User, _get_user, date_helper::get_age, USER_STORAGE};
 
 
 pub(crate) fn generate_swipe(user_id: Vec<u8>) -> Result<Option<Vec<Vec<u8>>>, Error>{
@@ -17,8 +17,6 @@ pub(crate) fn generate_swipe(user_id: Vec<u8>) -> Result<Option<Vec<Vec<u8>>>, E
     }
 
     let swipe_filters = curr_user.unwrap().swipe_filters;
-
-    //next step: bikin vectors of user ids yang match dengan filter yang ada
 
     //filters:
     //dari object user
@@ -65,15 +63,6 @@ pub(crate) fn generate_swipe(user_id: Vec<u8>) -> Result<Option<Vec<Vec<u8>>>, E
     //dari object hobby
     
 
-    
-    //TODO: bikin filter nya utk religion, age, dll
-    return Result::Ok(Some(vec_without_user));
+        return Result::Ok(Some(vec_without_user));
 
 }
-
-// fn filter_by_hobbies(hobbies: Vec<String>) -> Option<Vec<Vec<u8>>> {
-//     HOBBY_STORAGE.with(|m|) {
-        
-//     }
-// }
-
