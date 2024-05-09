@@ -57,7 +57,7 @@ struct Hobby {
     name: String,
 }
 
-#[derive(candid::CandidType, Clone, Serialize, Deserialize, Default)]
+#[derive(candid::CandidType, Clone, Serialize, Deserialize, Default, PartialEq, Eq)]
 struct Interest {
     user_id_source: Vec<u8>,
     user_id_destination: Vec<u8>,
@@ -249,38 +249,66 @@ fn add_interest(data: AddInterestPayload) -> Result<Option<Interest>, Error> {
     }
 }
 
-// #[ic_cdk::update]
-// fn update_interest(data: UpdateInterestPayload) -> Result<Option<Interest>, Error> {
+#[ic_cdk::update]
+fn update_interest(data: UpdateIsInterestedPayload) -> Result<Option<Interest>, Error> {
+    //cari dlu object interest nya, ambil positionnya (index nya), trus set value di idx tsb sama object user yg baru yg udah keupdate
+    let interest = interest_exist(&data.user_id_source, &data.user_id_destination);
 
-   
-// }
+    match interest {
+        //if it exists, get the index and set the new value of that index with new interest object
+        Some(interest) => {
+            let index = INTEREST_STORAGE.with(|s| {
+                s.borrow().iter().position(|i| i == interest)
+            });
 
-// #[ic_cdk::update]
-// fn update_reveal(data: UpdateIsRevealedPayload) -> Result<Option<Interest>, Error> {
+            if let Some(index) = index {
+                INTEREST_STORAGE.with(|s| {
+                    let updated_interest = Interest{ user_id_source: data.user_id_source, user_id_destination: data.user_id_destination, is_interested: data.is_interested, is_revealed: interest.is_revealed};
+                    s.borrow_mut().set(index.try_into().unwrap(), &updated_interest);
+                });
+            } else {
+                return Err(Error::NotFound { msg: "index of interest not found".to_string() });
+            }
 
-// }
+            Ok(None)
+        },
+        //else, insert the new hobby to the hobby storage
+        None => {
+            Err(Error::NotFound { msg: "Interest not found".to_string()})
+        },
+    }
+}
 
-//to update is_interested
-// fn update_interest(data: &UpdateIsInterestPayload) -> Option<Interest>{
+//difference with the update interest is only in updated_interest variable
+#[ic_cdk::update]
+fn update_reveal(data: UpdateIsRevealedPayload) -> Result<Option<Interest>, Error> {
+    //cari dlu object interest nya, ambil positionnya (index nya), trus set value di idx tsb sama object user yg baru yg udah keupdate
+    let interest = interest_exist(&data.user_id_source, &data.user_id_destination);
 
-//      //get index of interest with the same user source & user dest
-//     let index: Option<usize> = INTEREST_STORAGE.with(|s| {
-//         s.borrow().iter().position(|i: Interest| {
-//             (i.user_id_source == data.user_id_source) && (i.user_id_destination == data.user_id_destination)
-//         })
-//     });
+    match interest {
+        //if it exists, get the index and set the new value of that index with new interest object
+        Some(interest) => {
+            let index = INTEREST_STORAGE.with(|s| {
+                s.borrow().iter().position(|i| i == interest)
+            });
 
-//     //jika index ketemu, update object di position tersebut dengan updated interest
-//     match index {
-//         Some(index) => {
-//             let updated_interest = Interest { user_id_source: data.user_id_source, user_id_destination: data.user_id_destination, is_interested: data.is_interested, is_revealed: data.is_revealed };
-//             INTEREST_STORAGE.with(|s| s.borrow_mut().set(index.try_into().unwrap(), &updated_interest));
-//             return Ok(Some(updated_interest));
-//         },
-//         None => return Err(Error::InvalidPayloadData { msg: "invalid user id".to_string() })
-//     }
-// }
+            if let Some(index) = index {
+                INTEREST_STORAGE.with(|s| {
+                    let updated_interest = Interest{ user_id_source: data.user_id_source, user_id_destination: data.user_id_destination, is_interested: interest.is_interested, is_revealed: data.is_revealed};
+                    s.borrow_mut().set(index.try_into().unwrap(), &updated_interest);
+                });
+            } else {
+                return Err(Error::NotFound { msg: "index of interest not found".to_string() });
+            }
 
+            Ok(None)
+        },
+        //else, insert the new hobby to the hobby storage
+        None => {
+            Err(Error::NotFound { msg: "Interest not found".to_string()})
+        },
+    }
+}
 
 #[ic_cdk::update]
 fn update_hobby(data: UpdateHobbyPayload) -> Result<Option<Hobby>, Error> {
@@ -297,7 +325,8 @@ fn update_hobby(data: UpdateHobbyPayload) -> Result<Option<Hobby>, Error> {
             if let Some(index) = index {
                 HOBBY_STORAGE.with(|s| {
                     //ambil index terakhir
-                    let last_index_hobby = s.borrow_mut().get(s.borrow().len() - 1);
+                    let last_index = s.borrow().len() - 1;
+                    let last_index_hobby = s.borrow_mut().get(last_index);
 
                     match last_index_hobby {
                         //kalau index terakhir ada isinya
@@ -345,6 +374,14 @@ fn hobby_exist(data: &UpdateHobbyPayload) -> Option<Hobby> {
     HOBBY_STORAGE.with(|s| {
         s.borrow().iter().find(|hobby| {
             hobby.user_id == data.user_id && hobby.name == data.name
+        })
+    })
+}
+
+fn interest_exist(user_id_source: &Vec<u8>, user_id_dest: &Vec<u8>) -> Option<Interest> {
+    INTEREST_STORAGE.with(|s| {
+        s.borrow().iter().find(|interest| {
+            interest.user_id_source == *user_id_source && interest.user_id_destination == *user_id_dest
         })
     })
 }
