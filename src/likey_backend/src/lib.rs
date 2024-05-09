@@ -20,9 +20,15 @@ use std::{self};
 //module generate swipe
 pub mod generate_swipe;
 pub mod date_helper;
+mod permission_helper;
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 // type IdCell = Cell<u64, Memory>;
+
+static REVEAL_COST: i32 = 10; //per person revealed
+static FILTER_ACCESS_COST: i32 = 100; //one time buy
+static ADD_SWIPE_COST: i32 = 5; // per swipe
+static ROLLBACK_COST: i32 = 10; //per person rollbacked
 
 #[derive(candid::CandidType, Clone, Serialize, Deserialize, Default)]
 struct User {
@@ -282,6 +288,13 @@ fn update_interest(data: UpdateIsInterestedPayload) -> Result<Option<Interest>, 
 //difference with the update interest is only in updated_interest variable
 #[ic_cdk::update]
 fn update_reveal(data: UpdateIsRevealedPayload) -> Result<Option<Interest>, Error> {
+
+    let coin_enough = permission_helper::coin_sufficient(&data.user_id_source, REVEAL_COST);
+
+    if coin_enough == false {
+        return Err(Error::InvalidPayloadData { msg: "User don't have enough coin".to_string() });
+    }
+
     //cari dlu object interest nya, ambil positionnya (index nya), trus set value di idx tsb sama object user yg baru yg udah keupdate
     let interest = interest_exist(&data.user_id_source, &data.user_id_destination);
 
