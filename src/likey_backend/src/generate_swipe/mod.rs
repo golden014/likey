@@ -10,65 +10,65 @@ use crate::{Error, FilterAttribute, User, _get_user, date_helper::{self, get_age
 
 pub(crate) fn generate_swipe(user_id: Vec<u8>) -> Result<Option<Vec<Vec<u8>>>, Error>{
 
+    //get the user object
     let curr_user = _get_user(&user_id);
 
-    if curr_user.is_none() {
-        return Result::Err(Error::NotFound { msg: "Invalid user ID".to_string() });
+    match curr_user {
+        Some(curr_user) => {
+            //get the swipe filters of the user
+            let swipe_filters = curr_user.swipe_filters;
+
+            //from USER_STORAGE, filter all the user that match the given criteria (from swipe filters)
+            let filters_from_user_object: Vec<(Blob<29>, User)> =  USER_STORAGE.with(|s| {
+                s.borrow().iter().filter(|(_id, user)| {
+                    swipe_filters.iter().all(|(_key, value)| match value {
+
+                        FilterAttribute::Gender{ data } => {
+                            data.is_empty() || user.gender == *data
+                        },
+
+                        FilterAttribute::Education { data } => {
+                            *data == 0 || user.education == *data
+                        },
+
+                        FilterAttribute::Religion { data } => {
+                            data.is_empty() || user.religion == *data
+                        },
+
+                        //the height of the user must be inside of the specified range
+                        FilterAttribute::Height { data_start, data_end } => {
+                            (*data_start == 0 && *data_end == 0) || (user.height >= *data_start && user.height <= *data_end)
+                        },
+
+                        FilterAttribute::Age {data_start, data_end } => {
+                            (*data_start == 0 && *data_end == 0) || {
+                                let dob = user.dob.clone();
+                                //age must be inside of the specified range
+                                get_age(&dob) >= *data_start && get_age(&dob) <= *data_end
+                            }
+                        },
+                    })
+                }).collect::<Vec<_>>()
+        
+            });
+
+            //create vectors of id's from the vector of Blob, User
+            let vec_without_user: Vec<Vec<u8>> = filters_from_user_object.into_iter().map(|(_, user)| user.user_id).collect();
+
+            //get current date
+            let curr_date = date_helper::get_current_date();
+
+            //insert new swipe pool
+            match insert_to_swipe_pool(curr_user.user_id, vec_without_user, curr_date) {
+                Some(swipe_pool) => Ok(Some(swipe_pool.user_ids)),
+                None => Err(Error::NotFound { msg: "Error when inserting swipe pool".to_string() })
+            }
+        },
+
+        None => return Result::Err(Error::NotFound { msg: "Invalid user ID".to_string() }),
     }
 
-    let swipe_filters = curr_user.clone().unwrap().swipe_filters;
-
-    //filters:
-    //dari object user
-    //user - gender harus berlawanan arah dengan curr user's gender
-    //user - education
-    //user - religion
-    //user - height (masuk ke range yg dimau oleh user)
-    //user - age
-
-    let filters_from_user_object: Vec<(Blob<29>, User)> =  USER_STORAGE.with(|s| {
-        s.borrow().iter().filter(|(_id, user)| {
-            swipe_filters.iter().all(|(_key, value)| match value {
-
-                FilterAttribute::Gender{ data } => {
-                    data.is_empty() || user.gender == *data
-                },
-
-                FilterAttribute::Education { data } => {
-                    *data == 0 || user.education == *data
-                },
-
-                FilterAttribute::Religion { data } => {
-                    data.is_empty() || user.religion == *data
-                },
-
-                //the height of the user must be inside of the specified range
-                FilterAttribute::Height { data_start, data_end } => {
-                    (*data_start == 0 && *data_end == 0) || (user.height >= *data_start && user.height <= *data_end)
-                },
-
-                FilterAttribute::Age {data_start, data_end } => {
-                    (*data_start == 0 && *data_end == 0) || {
-                        let dob = user.dob.clone();
-                        get_age(&dob) >= *data_start && get_age(&dob) <= *data_end
-                    }
-                },
-            })
-        }).collect::<Vec<_>>()
- 
-    });
-
-    //create vectors of id's
-    let vec_without_user: Vec<Vec<u8>> = filters_from_user_object.into_iter().map(|(_, user)| user.user_id).collect();
-
-    //get current date
-    let curr_date = date_helper::get_current_date();
-
-    //insert new swipe pool
-    match insert_to_swipe_pool(curr_user.unwrap().user_id, vec_without_user, curr_date) {
-        Some(swipe_pool) => Ok(Some(swipe_pool.user_ids)),
-        None => Err(Error::NotFound { msg: "Error when inserting swipe pool".to_string() })
-    }
+    
 
 }
 

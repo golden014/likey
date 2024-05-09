@@ -5,6 +5,7 @@ use candid::{Decode, Encode};
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
 use ic_stable_structures::storable::Blob;
 use ic_stable_structures::{BoundedStorable, DefaultMemoryImpl, StableBTreeMap, Storable, StableVec};
+use permission_helper::coin_sufficient;
 use std::collections::HashMap;
 
 // use std::time::{SystemTime, UNIX_EPOCH};
@@ -368,6 +369,35 @@ fn update_hobby(data: UpdateHobbyPayload) -> Result<Option<Hobby>, Error> {
     }
 }
 
+#[ic_cdk::update]
+fn buy_filter_access(user_id: Vec<u8>) -> Result<Option<User>, Error> {
+    //get user
+    let user = _get_user(&user_id);
+
+    match user {
+        Some(mut user) => {
+            //validate user's filter access still false
+            if user.filter_access == true {
+                return Err(Error::NotFound { msg: "User already bought filter access".to_string() })
+            } else {
+                //check user's balance
+                let coin_enough = coin_sufficient(&user_id, FILTER_ACCESS_COST);
+
+                if coin_enough == true {
+                    //re insert user
+                    user.filter_access = true;
+                    do_insert_user(&user);
+                    return Ok(Some(user))
+                } else {
+                    return Err(Error::NotFound { msg: "User's coin is not enough".to_string() })
+                }
+                
+            }
+        },
+        None => Err(Error::NotFound { msg: "Invalid User id".to_string() }), 
+    }
+}
+
 #[ic_cdk::query]
 fn get_all_hobby_by_user_id(user_id: Vec<u8>) -> Vec<Hobby> {
     let mut output: Vec<Hobby> = Vec::new();
@@ -568,6 +598,11 @@ fn update_swipe_filter(id: Vec<u8>, filter_attribute: HashMap<String, FilterAttr
 
     match user {
         Some(mut user) => {
+
+            if user.filter_access == false {
+                return Err(Error::InvalidPayloadData { msg: "User need to buy filter access first".to_string() })
+            }
+
             user.swipe_filters = filter_attribute;
             do_insert_user(&user);
             return Result::Ok(Some(user.swipe_filters))
