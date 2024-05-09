@@ -384,6 +384,19 @@ fn get_all_interest_by_user_id(user_id: Vec<u8>) -> Vec<Interest> {
     output
 }
 
+#[ic_cdk::query]
+fn get_all_interest_by_user_id_not_interested(user_id: Vec<u8>) -> Vec<Interest> {
+    let mut output: Vec<Interest> = Vec::new();
+    INTEREST_STORAGE.with(|s| {
+        for i in s.borrow().iter() {
+            if (i.user_id_source == user_id ) && (i.is_interested == false){
+                output.push(i)
+            }
+        }
+    });
+    output
+}
+
 fn hobby_exist(data: &UpdateHobbyPayload) -> Option<Hobby> {
     HOBBY_STORAGE.with(|s| {
         s.borrow().iter().find(|hobby| {
