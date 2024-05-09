@@ -136,20 +136,19 @@ thread_local! {
         MemoryManager::init(DefaultMemoryImpl::default())
     );
 
-    // static USER_ID_COUNTER: RefCell<Cell<u64, Memory>> = RefCell::new(
-    //     Cell<u64, Memory>::init(MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(0))), 0)
-    //         .expect("Cannot create a user ID counter")
-    // );
-
     static USER_STORAGE: RefCell<StableBTreeMap<Blob<29>, User, Memory>> =
         RefCell::new(StableBTreeMap::init(
             MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(1)))
     )); 
 
-    static SWIPE_POOL_STORAGE: RefCell<StableBTreeMap<Blob<29>, SwipePool, Memory>> =
-        RefCell::new(StableBTreeMap::init(
+    // static SWIPE_POOL_STORAGE: RefCell<StableBTreeMap<Blob<29>, SwipePool, Memory>> =
+    //     RefCell::new(StableBTreeMap::init(
+    //         MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(2)))
+    // ));
+    static SWIPE_POOL_STORAGE: RefCell<StableVec<SwipePool, Memory>> = 
+        RefCell::new(StableVec::init(
             MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(2)))
-    ));
+    ).unwrap_or_else(|_| panic!("Failed to initialize Swipe Pool Storage")));
 
     //pakai stableVec soalnya hobby storage gapakai key, tapi dia return nya result yg bisa jadi error, jadi perlu dipasangin unwrap
     static HOBBY_STORAGE: RefCell<StableVec<Hobby, Memory>> = 
@@ -545,7 +544,7 @@ fn get_feeds(id: Vec<u8>) -> Result<Option<Vec<Vec<u8>>>, Error> {
     let mut curr_swipe_pool: Option<SwipePool> = None;
     
     SWIPE_POOL_STORAGE.with(|service| {
-        for (_, swipe_pool) in service.borrow().iter() {
+        for swipe_pool in service.borrow().iter() {
             //belom di test -> masih nunggu ke generate dlu
             if swipe_pool.owner_id == id && swipe_pool.date == curr_date.to_string(){
                 already_generated = true;
@@ -560,9 +559,7 @@ fn get_feeds(id: Vec<u8>) -> Result<Option<Vec<Vec<u8>>>, Error> {
     }
 
     //else: generate user's swipe pool
-    
-    //dummy
-    return Result::Err(Error::NotFound { msg: "Invalid user ID".to_string() });
+    generate_swipe::generate_swipe(id)
 }
 
 #[ic_cdk::update]

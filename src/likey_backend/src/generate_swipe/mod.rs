@@ -5,7 +5,7 @@
 
 use ic_stable_structures::storable::Blob;
 
-use crate::{Error, FilterAttribute, User, _get_user, date_helper::get_age, USER_STORAGE};
+use crate::{Error, FilterAttribute, User, _get_user, date_helper::{self, get_age}, SwipePool, SWIPE_POOL_STORAGE, USER_STORAGE};
 
 
 pub(crate) fn generate_swipe(user_id: Vec<u8>) -> Result<Option<Vec<Vec<u8>>>, Error>{
@@ -16,7 +16,7 @@ pub(crate) fn generate_swipe(user_id: Vec<u8>) -> Result<Option<Vec<Vec<u8>>>, E
         return Result::Err(Error::NotFound { msg: "Invalid user ID".to_string() });
     }
 
-    let swipe_filters = curr_user.unwrap().swipe_filters;
+    let swipe_filters = curr_user.clone().unwrap().swipe_filters;
 
     //filters:
     //dari object user
@@ -55,14 +55,31 @@ pub(crate) fn generate_swipe(user_id: Vec<u8>) -> Result<Option<Vec<Vec<u8>>>, E
                 },
             })
         }).collect::<Vec<_>>()
+ 
     });
 
+    //create vectors of id's
     let vec_without_user: Vec<Vec<u8>> = filters_from_user_object.into_iter().map(|(_, user)| user.user_id).collect();
 
-    
-    //dari object hobby
-    
+    //get current date
+    let curr_date = date_helper::get_current_date();
 
-        return Result::Ok(Some(vec_without_user));
+    //insert new swipe pool
+    match insert_to_swipe_pool(curr_user.unwrap().user_id, vec_without_user, curr_date) {
+        Some(swipe_pool) => Ok(Some(swipe_pool.user_ids)),
+        None => Err(Error::NotFound { msg: "Error when inserting swipe pool".to_string() })
+    }
 
+}
+
+fn insert_to_swipe_pool(owner_id: Vec<u8>, user_ids: Vec<Vec<u8>>, date: String) -> Option<SwipePool>{
+    
+   let new_swipe_pool = SwipePool{ owner_id: owner_id, user_ids: user_ids, date: date};
+    
+    match SWIPE_POOL_STORAGE.with(|s| {
+        s.borrow_mut().push(&new_swipe_pool)
+    }) {
+        Ok(_) => return Some(new_swipe_pool),
+        Err(_) => return None,
+    }
 }
