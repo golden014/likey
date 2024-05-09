@@ -89,6 +89,8 @@ service : {
   create_user : (UserPayload) -> (Result_1);
   generate_swipe_by_id : (blob) -> (Result_2) query;
   get_all_hobby_by_user_id : (blob) -> (vec Hobby) query;
+  get_all_interest_by_user_id : (blob) -> (vec Interest) query;
+  get_all_interest_by_user_id_not_interested : (blob) -> (vec Interest) query;
   get_feeds : (blob) -> (Result_2);
   get_user : (blob) -> (Result_3) query;
   greet : (text) -> (text) query;

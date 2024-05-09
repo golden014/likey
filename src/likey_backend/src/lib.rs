@@ -384,13 +384,17 @@ fn get_all_interest_by_user_id(user_id: Vec<u8>) -> Vec<Interest> {
     output
 }
 
+//history
 #[ic_cdk::query]
-fn get_all_interest_by_user_id_not_interested(user_id: Vec<u8>) -> Vec<Interest> {
-    let mut output: Vec<Interest> = Vec::new();
+fn get_not_interested_history(user_id: Vec<u8>) -> Vec<User> {
+    let mut output: Vec<User> = Vec::new();
     INTEREST_STORAGE.with(|s| {
         for i in s.borrow().iter() {
             if (i.user_id_source == user_id ) && (i.is_interested == false){
-                output.push(i)
+                match _get_user(&i.user_id_destination){
+                    Some(user) => output.push(user),
+                    None => {},
+                }  
             }
         }
     });
