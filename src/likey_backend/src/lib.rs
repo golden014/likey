@@ -278,7 +278,6 @@ fn update_interest(data: UpdateIsInterestedPayload) -> Result<Option<Interest>, 
 
             Ok(None)
         },
-        //else, insert the new hobby to the hobby storage
         None => {
             Err(Error::NotFound { msg: "Interest not found".to_string()})
         },
@@ -385,6 +384,7 @@ fn buy_filter_access(user_id: Vec<u8>) -> Result<Option<User>, Error> {
 
                 if coin_enough == true {
                     //re insert user
+                    user.likey_coin = user.likey_coin - FILTER_ACCESS_COST;
                     user.filter_access = true;
                     do_insert_user(&user);
                     return Ok(Some(user))
@@ -563,8 +563,6 @@ fn update_user(id: Vec<u8>, data: UserProfilePayload) -> Result<User, Error> {
 
 #[ic_cdk::update]
 fn get_feeds(id: Vec<u8>) -> Result<Option<Vec<Vec<u8>>>, Error> {
-    //TODO: cek swipe pool klo gaada panggil generate_swipe function di generate_swipe/mod.rs
-
     //check if the feeds for the user for today's date already generated or not
 
     //date format = yyyy-mm-dd
@@ -602,7 +600,6 @@ fn update_swipe_filter(id: Vec<u8>, filter_attribute: HashMap<String, FilterAttr
             if user.filter_access == false {
                 return Err(Error::InvalidPayloadData { msg: "User need to buy filter access first".to_string() })
             }
-
             user.swipe_filters = filter_attribute;
             do_insert_user(&user);
             return Result::Ok(Some(user.swipe_filters))
@@ -611,6 +608,86 @@ fn update_swipe_filter(id: Vec<u8>, filter_attribute: HashMap<String, FilterAttr
     }
 }
 
+#[ic_cdk::update]
+fn add_swipe(user_id: Vec<u8>, swipe_amount: i32) -> Result<Option<User>, Error> {
+
+    //check user's balance
+    let coin_enough = permission_helper::coin_sufficient(&user_id, ADD_SWIPE_COST * swipe_amount);
+
+    if coin_enough == false {
+        return Err(Error::InvalidPayloadData { msg: "User's balance is not enough".to_string() })
+    }
+
+    let user = _get_user(&user_id);
+
+    match user {
+        Some(mut user) => {
+            user.current_swipe = user.current_swipe + swipe_amount;
+            user.likey_coin = user.likey_coin - (ADD_SWIPE_COST * swipe_amount);
+            do_insert_user(&user);
+            return Ok(Some(user));
+        },
+        None => return Err(Error::NotFound { msg: "User id not found".to_string() }),
+    }
+}
+
+#[ic_cdk::update]
+fn rollback_user(user_id_source: Vec<u8>, user_id_dest: Vec<u8>) -> Result<bool, Error> {
+    //perlu cek di interest user id source apakah user id dest exist dan isInterested false
+    //cek balance user
+    //update is_interested menjadi true (trus lanjutin logic match)
+    
+    let interest = interest_exist(&user_id_source, &user_id_dest);
+
+    match interest {
+        Some(mut interest) => {
+            if interest.is_interested == false {
+                let coin_enough = permission_helper::coin_sufficient(&user_id_source, ROLLBACK_COST);
+
+                if coin_enough == true {
+                    match _get_user(&user_id_source) {
+                        Some(mut user) => {
+                            //update user's coin
+                            user.likey_coin = user.likey_coin - ROLLBACK_COST;
+                            do_insert_user(&user);
+
+                            let mut new_interest = interest.clone();
+                            new_interest.is_interested = true;
+
+                            //update interest
+                            match _update_interest_helper(interest, new_interest) {
+                                Some(_) => return Ok(true),
+                                None => return Err(Error::NotFound { msg: "Error when updating interest".to_string() })
+                            }
+                        },
+                        None => return Err(Error::NotFound { msg: "User not found".to_string() }),
+                    }
+                }
+
+                return Err(Error::NotFound { msg: "User's coin is not enough".to_string() });
+            }
+
+            return Err(Error::InvalidPayloadData { msg: "User's already interested with the specified user".to_string() })
+        },
+        None => return Err(Error::NotFound { msg: "Interest not found".to_string() }),
+    }
+}
+
+fn _update_interest_helper(data_before: Interest, data_after: Interest) -> Option<Interest> {
+    let index = INTEREST_STORAGE.with(|s| {
+        s.borrow().iter().position(|i| i == data_before)
+    });
+
+    if let Some(index) = index {
+        INTEREST_STORAGE.with(|s| {
+            s.borrow_mut().set(index.try_into().unwrap(), &data_after);
+        });
+
+        Some(data_after)
+    } else {
+        None
+    }
+}
 
 
 ic_cdk::export_candid!();
