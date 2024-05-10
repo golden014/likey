@@ -47,8 +47,9 @@ struct User {
     current_swipe: i32,
     filter_access: bool,
     swipe_filters: HashMap<String, FilterAttribute>,
-    dob: String
-    //TODO : tambahin attribute last time reset current swipe
+    dob: String,
+    //supaya saat balik app, ga ulang swipe dari awal
+    last_swipe_index: i32
 }
 
 #[derive(candid::CandidType, Clone, Serialize, Deserialize, Default)]
@@ -205,7 +206,6 @@ struct AddInterestPayload {
     user_id_source: Vec<u8>,
     user_id_destination: Vec<u8>,
     is_interested: bool,
-    is_revealed: bool
 }
 
 #[derive(candid::CandidType, Serialize, Deserialize, Default)]
@@ -297,6 +297,7 @@ fn update_reveal(data: UpdateIsRevealedPayload) -> Result<Option<Interest>, Erro
     //cari dlu object interest nya, ambil positionnya (index nya), trus set value di idx tsb sama object user yg baru yg udah keupdate
     let interest = interest_exist(&data.user_id_source, &data.user_id_destination);
 
+    //TODO: update user's coin -> code nya rapiin jadi kaya yg di rollback aja ntar
     match interest {
         //if it exists, get the index and set the new value of that index with new interest object
         Some(interest) => {
@@ -462,42 +463,41 @@ fn interest_exist(user_id_source: &Vec<u8>, user_id_dest: &Vec<u8>) -> Option<In
 
 #[ic_cdk::update]
 fn create_user(data: UserPayload) -> Result<Option<User>, Error> {
-
-    let new_user = User {
-        user_id: data.user_principal_id,
-        first_name: data.first_name,
-        last_name: data.last_name,
-        height: data.height,
-        gender: data.gender,
-        education: data.education,
-        religion: data.religion,
-        description: data.description,
-        profile_picture_link: data.profile_picture_link,
-        photo_link: data.photo_link,
-        likey_coin: 0,
-        current_swipe: data.current_swipe,
-        filter_access: data.filter_access,
-        swipe_filters: data.swipe_filters,
-        dob: data.dob
-    };
-
-    //insert new User
-    let insert_success = do_insert_user(&new_user);
-
-    match insert_success {
-        true => return Result::Ok(Some(new_user)),
-        false => return Result::Err(Error::NotFound { msg: "error while inserting new user".to_string() })
+    //check if user with the same principal id already exist
+    match _get_user(&data.user_principal_id) {
+        Some(_) => {
+            return Err(Error::InvalidPayloadData { msg: "User already exists".to_string() })
+        },
+        None => {
+            let new_user = User {
+                user_id: data.user_principal_id,
+                first_name: data.first_name,
+                last_name: data.last_name,
+                height: data.height,
+                gender: data.gender,
+                education: data.education,
+                religion: data.religion,
+                description: data.description,
+                profile_picture_link: data.profile_picture_link,
+                photo_link: data.photo_link,
+                likey_coin: 0,
+                current_swipe: data.current_swipe,
+                filter_access: data.filter_access,
+                swipe_filters: data.swipe_filters,
+                dob: data.dob,
+                last_swipe_index: 0
+            };
+        
+            //insert new User
+            do_insert_user(&new_user);
+            Ok(Some(new_user))
+        },
     }
-
 }
 
-fn do_insert_user(data: &User) -> bool {
+fn do_insert_user(data: &User) {
     let p = Blob::from_bytes(std::borrow::Cow::Borrowed(&data.user_id));
-    let a = USER_STORAGE.with(|service| service.borrow_mut().insert(p, data.clone()));
-    match  a {
-        Some(_user) => return false,
-        None => return true,
-    }
+    USER_STORAGE.with(|service| service.borrow_mut().insert(p, data.clone()));
 }
 
 fn _get_user(id: &Vec<u8>) -> Option<User> {
@@ -511,8 +511,7 @@ fn test_get_age(dob: String) -> i32 {
 }
 
 
-#[ic_cdk::query]
-fn generate_swipe_by_id(id: Vec<u8>) -> Result<Option<Vec<Vec<u8>>>, Error> {
+fn _generate_swipe_by_id(id: Vec<u8>) -> Option<Vec<Vec<u8>>> {
     generate_swipe::generate_swipe(id)
 }
 
@@ -562,7 +561,7 @@ fn update_user(id: Vec<u8>, data: UserProfilePayload) -> Result<User, Error> {
 }
 
 #[ic_cdk::update]
-fn get_feeds(id: Vec<u8>) -> Result<Option<Vec<Vec<u8>>>, Error> {
+fn get_feeds(id: Vec<u8>) -> Result<Option<Vec<User>>, Error> {
     //check if the feeds for the user for today's date already generated or not
 
     //date format = yyyy-mm-dd
@@ -583,11 +582,17 @@ fn get_feeds(id: Vec<u8>) -> Result<Option<Vec<Vec<u8>>>, Error> {
 
     //if user's swipe pool already generated that day
     if already_generated == true {
-        return Result::Ok(Some(curr_swipe_pool.unwrap().user_ids))
+        return Result::Ok(Some(_get_multiple_user_by_ids(curr_swipe_pool.unwrap().user_ids)))
     }
 
     //else: generate user's swipe pool
-    generate_swipe::generate_swipe(id)
+    match generate_swipe::generate_swipe(id) {
+        Some(ids) => {
+           Ok(Some(_get_multiple_user_by_ids(ids)))
+        },
+        None => Err(Error::NotFound { msg: "Error while generating feeds".to_string() }),
+    }
+    
 }
 
 #[ic_cdk::update]
@@ -687,6 +692,27 @@ fn _update_interest_helper(data_before: Interest, data_after: Interest) -> Optio
     } else {
         None
     }
+}
+
+// #[ic_cdk::query]
+fn _get_multiple_user_by_ids(user_ids: Vec<Vec<u8>>) -> Vec<User> {
+    
+    USER_STORAGE.with(|user_storage| {
+        let s = user_storage.borrow();
+
+        user_ids
+        .into_iter()
+        .filter_map(|id| {
+            let p = Blob::from_bytes(std::borrow::Cow::Borrowed(&id));
+
+            match s.get(&p) {
+                Some(user) => Some(user.clone()),
+                None => None,
+            }
+            
+        })
+        .collect()
+    })    
 }
 
 

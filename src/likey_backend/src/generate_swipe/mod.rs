@@ -8,7 +8,9 @@ use ic_stable_structures::storable::Blob;
 use crate::{Error, FilterAttribute, User, _get_user, date_helper::{self, get_age}, SwipePool, SWIPE_POOL_STORAGE, USER_STORAGE};
 
 
-pub(crate) fn generate_swipe(user_id: Vec<u8>) -> Result<Option<Vec<Vec<u8>>>, Error>{
+pub(crate) fn generate_swipe(user_id: Vec<u8>) -> Option<Vec<Vec<u8>>>{
+
+    //TODO: tambahin constraint filter access
 
     //get the user object
     let curr_user = _get_user(&user_id);
@@ -60,12 +62,12 @@ pub(crate) fn generate_swipe(user_id: Vec<u8>) -> Result<Option<Vec<Vec<u8>>>, E
 
             //insert new swipe pool
             match insert_to_swipe_pool(curr_user.user_id, vec_without_user, curr_date) {
-                Some(swipe_pool) => Ok(Some(swipe_pool.user_ids)),
-                None => Err(Error::NotFound { msg: "Error when inserting swipe pool".to_string() })
+                Some(swipe_pool) => Some(swipe_pool.user_ids),
+                None => None
             }
         },
 
-        None => return Result::Err(Error::NotFound { msg: "Invalid user ID".to_string() }),
+        None => return None,
     }
 
     
