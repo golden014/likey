@@ -4,8 +4,16 @@ import { enc, dec } from "./cryptController";
 
 
 export const getUserDataFromDB = async (id : number[]) => {
-    console.log(id)
+    console.log("userDataController line 7", id)
     const data = await likey_backend.get_user(id)
+    console.log(data)
+
+    if(Object.keys(data)[0] != "Ok"){
+        const serializedValue = await enc(JSON.stringify(id));
+        setCookie("my_principal_id", serializedValue);
+        setCookie("wswsws", "aaaa");
+        return null
+    }
 
     if(data != null){
         deleteCookie("user-data")
@@ -14,6 +22,7 @@ export const getUserDataFromDB = async (id : number[]) => {
             setCookie("user-data",input)
         }
     }
+    
 
     return data
 }

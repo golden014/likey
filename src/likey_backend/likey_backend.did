@@ -36,6 +36,7 @@ type UpdateIsRevealedPayload = record {
   user_id_destination : blob;
   is_revealed : bool;
 };
+type UpdateUserCoinPayload = record { likey_coin : int32 };
 type User = record {
   dob : text;
   height : int32;
@@ -101,5 +102,5 @@ service : {
   update_swipe_filter : (blob, vec record { text; FilterAttribute }) -> (
       Result_6,
     );
-  update_user : (blob, UserProfilePayload) -> (Result_3);
+  update_user : (blob, UserProfilePayload) -> (Result_2);
 }

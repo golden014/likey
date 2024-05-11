@@ -4,6 +4,8 @@ import { ChangeEvent, useState } from "react"
 import { AuthClient } from "@dfinity/auth-client";
 import { useRouter } from "next/navigation";
 import { getUserDataFromDB, getUserDataFromStorage } from "@/app/utility/userDataController";
+import { getCookie, setCookie } from "cookies-next";
+import { dec, enc } from "@/app/utility/cryptController";
 
 
 const LoginPage = () =>{
@@ -62,15 +64,31 @@ const LoginPage = () =>{
         // console.log(authClient.getIdentity().getPrincipal())
         
         // console.log(user)
+       
+
         if (await authClient.isAuthenticated()) {
             console.log("dah ada")
             const user = await getUserDataFromDB(Array.from(authClient.getIdentity().getPrincipal().toUint8Array()))
-            router.push('/explore')
-        }else{
+            if(user == null){
+                console.log("line 69", "user null")
+                router.push('/user/register')
+            }else{
+                
+                router.push('/explore')
+            }
+        }
+        else{
             authClient.login(defaultOptions.loginOptions).then(async ()=>{
         //         const user = await getUserDataFromDB(authClient.getIdentity().getPrincipal().toString())
             const user = await getUserDataFromDB(Array.from(authClient.getIdentity().getPrincipal().toUint8Array()))
-            router.push('/explore')
+            
+            if(user == null){
+                console.log("line 76", "user null")
+                router.push('/user/register')
+            }
+            else{
+                router.push('/explore')
+            }            
 
         //         const user = await likey_backend.get_user(authClient.getIdentity().getPrincipal())
         //         if (user !== null) {
@@ -80,7 +98,7 @@ const LoginPage = () =>{
         //             // router.push('/home')
         //         }
             }).catch((e)=>{
-                console.log(e)
+                console.log("login 85",e)
             })
         }
     }

@@ -5,9 +5,11 @@ import Image from 'next/image';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFilter, faHeart, faHeartBroken, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 import { DUMMY_PROFILE, HOBBIES } from '../dummy_data';
+import { getUserDataFromStorage } from '../utility/userDataController';
 
-const page = () => {
-
+const Page = async () => {
+    const user = await getUserDataFromStorage()
+    console.log(user)   
     return (
       <div className='w-screen h-screen bg-background flex justify-around items-center'>
         
@@ -98,4 +100,4 @@ const page = () => {
     )
 }
 
-export default page
+export default Page

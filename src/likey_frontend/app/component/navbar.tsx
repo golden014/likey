@@ -19,7 +19,7 @@ const Navbar = ({pageName} : {pageName : string}) => {
         explore : pageName == "Explore" ? "bg-main" : "bg-background",
         chat : pageName == "Chat" ? "bg-main" : "bg-background",
         interest : pageName == "Interest" ? "bg-main" : "bg-background",
-        payment : pageName == "Payment" ? "bg-main" : "bg-background",
+        payment : pageName == "Purchase" ? "bg-main" : "bg-background",
         setting : pageName == "Setting" ? "bg-main" : "bg-background",
     }
 
@@ -44,7 +44,7 @@ const Navbar = ({pageName} : {pageName : string}) => {
             </div>
             {/* Bot Part */}
             <div className='w-full flex items-center justify-center p-6 flex-col gap-4'>
-                <Link href={"/subscribe"} className={`${defaultTailwind} ${color.payment}`}>
+                <Link href={"/purchase"} className={`${defaultTailwind} ${color.payment}`}>
                     <FontAwesomeIcon icon={faDollar} className='w-3/5 h-3/5' color='white'/>
                 </Link>
                 <Link href={"/user/login"} className={`${defaultTailwind}`}>

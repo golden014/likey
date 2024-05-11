@@ -9,6 +9,7 @@ const PhotoUpload = ({goNext } : {goNext: () => void}) => {
         const file = e.target.files[0];
         const newImages = [...selectedImages];
         newImages[selectedImages.filter(image => image !== null).length] = file;
+        console.log("line 12 photo" , file)
         setSelectedImages(newImages);
         }
     };

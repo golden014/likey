@@ -180,7 +180,12 @@ struct UserPayload {
     current_swipe: i32,
     filter_access: bool,
     swipe_filters: HashMap<String, FilterAttribute>,
-    dob: String
+    dob: String,
+}
+
+#[derive(candid::CandidType, Serialize, Deserialize, Default)]
+struct UpdateUserCoinPayload{
+    likey_coin: i32
 }
 
 #[derive(candid::CandidType, Serialize, Deserialize, Default)]
@@ -560,6 +565,65 @@ fn update_user(id: Vec<u8>, data: UserProfilePayload) -> Result<User, Error> {
             ),
         }),
     }
+}
+
+#[ic_cdk::update]
+fn update_coin(id: Vec<u8>, data: UpdateUserCoinPayload)->Result<User, Error>{
+    // TODO: this function called if we want already success purchase a coin using ICP.
+
+    // User likey_coin will be added with number of coins purchased.
+    let user = _get_user(&id);
+    match user{
+        Some(mut u) => {
+            u.likey_coin = u.likey_coin + data.likey_coin;
+            do_insert_user(&u);
+            Ok(u)
+        }
+        None => Err(Error::NotFound {
+            msg: format!(
+                "couldn't update user with id={:?}. user not found",
+                id
+            ),
+        }),
+    }
+}
+
+#[ic_cdk::update]
+// Reveal Profile Who Interest with You: 10 likey coin/person
+// Filter Access: 100 likey coin (one time buy)
+// Add Swipes Allotment: 5 likey coin/swipe
+// Rollback/Reswipe(Reswipe person who had left swiped): 10 likey coin/person
+fn feature_payment(id: Vec<u8>, purchase_type: u8) -> Result<User, Error>{
+    let user = _get_user(&id);
+    match user{
+        Some(mut u) => {
+            // Reveal Profile Who Interest with You: 10 likey coin/person
+            if purchase_type == 1{
+
+            }
+            // Filter Access: 100 likey coin (one time buy)
+            else if purchase_type == 2{
+                u.filter_access = true;
+            }
+            // Add Swipes Allotment: 5 likey coin/swipe
+            else if purchase_type == 3{
+
+            }
+            // Rollback/Reswipe(Reswipe person who had left swiped): 10 likey coin/person
+            else if purchase_type == 4{
+                
+            }
+            do_insert_user(&u);
+            Ok(u)
+        },
+        None => Err(Error::NotFound {
+            msg: format!(
+                "couldn't update user with id={:?}. user not found",
+                id
+            ),
+        }),
+    }
+        
 }
 
 #[ic_cdk::update]

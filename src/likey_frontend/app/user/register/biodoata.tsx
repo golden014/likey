@@ -1,16 +1,28 @@
 import { EDUCATIONS, GENDERS, RELIGIONS } from '@/app/data';
 import React, { useState, ChangeEvent } from 'react';
+import DatePicker from "react-datepicker";
+
+import "react-datepicker/dist/react-datepicker.css";
 
 const Biodata = ({ onChanges, goNext } : {onChanges: (fieldName: string, value: string) => void, goNext: () => void}) => {
-
+    const [startDate, setStartDate] = useState(new Date());
     const handleChange = (event : ChangeEvent<HTMLInputElement>) => {
+        console.log(event.target)
         const {name, value} = event.target
         onChanges(name, value)
     }
 
     const handleDropdownChange = (event : ChangeEvent<HTMLSelectElement>) => {
+        
         const {name, value} = event.target
         onChanges(name, value)
+    }
+    
+    const handleDate = (event:any)=>{
+        console.log(event)
+        setStartDate(event)
+        
+        onChanges("dob", event)      
     }
 
     return (
@@ -18,6 +30,7 @@ const Biodata = ({ onChanges, goNext } : {onChanges: (fieldName: string, value: 
             <div className='font-bold flex flex-wrap text-title justify-start h-1/4 items-end p-6 w-full'>
                 Add Your Biodata
             </div>
+            
             <div className='grid grid-rows-3 grid-cols-2 h-1/2 w-4/5'>
                 <div className='flex flex-col w-4/5'>
                     <label htmlFor="first_name" className='font-bold pl-3'>First Name</label>
@@ -30,6 +43,14 @@ const Biodata = ({ onChanges, goNext } : {onChanges: (fieldName: string, value: 
                 <div className='flex flex-col w-4/5'>
                     <label htmlFor="height" className='font-bold pl-3'>Height</label>
                     <input onChange={handleChange} name='height' id='height' type="number" defaultValue={120} min={100} max={210} className='border-3 w-full h-auth_form_input border-border_placeholder bg-background shadow-xl rounded-default px-2' placeholder='Height' />
+                </div>
+                <div className='flex flex-col w-4/5'>
+                    <label htmlFor="description" className='font-bold pl-3'>Description</label>
+                    <input onChange={handleChange} name='description' id='description' type="text" defaultValue={120} min={100} max={210} className='border-3 w-full h-auth_form_input border-border_placeholder bg-background shadow-xl rounded-default px-2' placeholder='Description' />
+                </div>
+                <div className='flex flex-col w-4/5'>
+                    <label htmlFor="date" className='font-bold pl-3'>Date of Birth</label>
+                    <DatePicker selected={startDate} name='dob' id='dob' onChange={(e) => e && handleDate(e)}  />
                 </div>
                 <div className='flex flex-col w-4/5'>
                     <label htmlFor="gender" className='font-bold pl-3'>Gender</label>
