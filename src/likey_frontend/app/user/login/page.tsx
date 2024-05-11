@@ -80,15 +80,17 @@ const LoginPage = () =>{
         else{
             authClient.login(defaultOptions.loginOptions).then(async ()=>{
         //         const user = await getUserDataFromDB(authClient.getIdentity().getPrincipal().toString())
-            const user = await getUserDataFromDB(Array.from(authClient.getIdentity().getPrincipal().toUint8Array()))
+            // console.log(authClient.getIdentity().getPrincipal().toString())
+            // const user = await getUserDataFromDB(Array.from(authClient.getIdentity().getPrincipal().toUint8Array()))
             
-            if(user == null){
-                console.log("line 76", "user null")
-                router.push('/user/register')
-            }
-            else{
-                router.push('/explore')
-            }            
+            // if(user == null){
+            //     console.log("line 76", "user null")
+            //     router.push('/user/login')
+            // }
+            // else{
+            //     router.push('/explore')
+            // }            
+            router.push('/user/login')
 
         //         const user = await likey_backend.get_user(authClient.getIdentity().getPrincipal())
         //         if (user !== null) {

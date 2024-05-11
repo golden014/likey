@@ -9,9 +9,11 @@ export const getUserDataFromDB = async (id : number[]) => {
     console.log(data)
 
     if(Object.keys(data)[0] != "Ok"){
+        console.log("line 12 udc", id)
         const serializedValue = await enc(JSON.stringify(id));
         setCookie("my_principal_id", serializedValue);
         setCookie("wswsws", "aaaa");
+
         return null
     }
 
