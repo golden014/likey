@@ -2,7 +2,6 @@ type AddInterestPayload = record {
   user_id_source : blob;
   user_id_destination : blob;
   is_interested : bool;
-  is_revealed : bool;
 };
 type Error = variant {
   NotFound : record { msg : text };
@@ -31,11 +30,6 @@ type Result_5 = variant { Ok : opt Hobby; Err : Error };
 type Result_6 = variant {
   Ok : opt vec record { text; FilterAttribute };
   Err : Error;
-};
-type UpdateIsInterestedPayload = record {
-  user_id_source : blob;
-  user_id_destination : blob;
-  is_interested : bool;
 };
 type UpdateIsRevealedPayload = record {
   user_id_source : blob;
@@ -85,6 +79,7 @@ type UserProfilePayload = record {
   first_name : text;
   last_name : text;
   religion : text;
+  photo_link : vec text;
 };
 service : {
   add_interest : (AddInterestPayload) -> (Result);
@@ -101,7 +96,7 @@ service : {
   test_date : () -> (text) query;
   test_get_age : (text) -> (int32) query;
   update_hobby : (Hobby) -> (Result_5);
-  update_interest : (UpdateIsInterestedPayload) -> (Result);
+  update_interest : (AddInterestPayload) -> (Result);
   update_reveal : (UpdateIsRevealedPayload) -> (Result);
   update_swipe_filter : (blob, vec record { text; FilterAttribute }) -> (
       Result_6,

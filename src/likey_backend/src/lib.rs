@@ -191,7 +191,8 @@ struct UserProfilePayload {
     education: i32,
     religion: String,
     description: String,
-    profile_picture_link: String
+    profile_picture_link: String,
+    photo_link: Vec<String>
 }
 
 #[derive(candid::CandidType, Serialize, Deserialize, Default)]
@@ -548,6 +549,7 @@ fn update_user(id: Vec<u8>, data: UserProfilePayload) -> Result<User, Error> {
             u.religion= data.religion;
             u.description= data.description;
             u.profile_picture_link= data.profile_picture_link;
+            u.photo_link = data.photo_link;
             do_insert_user(&u);
             Ok(u)
         }
