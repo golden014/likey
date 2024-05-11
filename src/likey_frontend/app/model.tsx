@@ -78,7 +78,6 @@ export interface UserData{
     likey_coin: number,
     current_swipe: number,
     filter_access: boolean,
-    hobby: string[]
 }
 
 export interface Chat{
@@ -101,7 +100,8 @@ export interface UpdateUserPayload{
     education: number,
     religion: string,
     description: string,
-    profile_picture_link: string
+    profile_picture_link: string,
+    photo_link: string[]
 }
 
 export interface UpdateUserCoinPayload{

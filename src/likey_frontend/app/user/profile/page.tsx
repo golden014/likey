@@ -28,8 +28,7 @@ const ProfilePage: any = () => {
             photo_link: [],
             likey_coin: -999,
             current_swipe: -999,
-            filter_access: false,
-            hobby: []
+            filter_access: false
         }
     )
 
@@ -82,7 +81,8 @@ const ProfilePage: any = () => {
             description: user.description,
             first_name: user.first_name,
             last_name: user.last_name,
-            religion: user.religion
+            religion: user.religion,
+            photo_link: user.photo_link
         }
 
         const newpayload = {
@@ -140,8 +140,7 @@ const ProfilePage: any = () => {
                 photo_link: x['photo_link'],
                 likey_coin: x['likey_coin'],
                 current_swipe: x['current_swipe'],
-                filter_access: x['filter_access'],
-                hobby: x['hobby']
+                filter_access: x['filter_access']
             })
         }
     }
@@ -199,11 +198,11 @@ const ProfilePage: any = () => {
                         <div className="flex flex-col w-full h-72 px-1">
                                 <p className="text-xs text-gray-400">Pictures of you</p>
                                 <div className="w-full flex flex-row flex-wrap overflow-scroll">
-                                    <label htmlFor="fileupload" className='h-explore_image_height aspect-square bg-blue-200 hover:bg-blue-300 active:bg-blue-400 rounded-default text-xl mb-1 mr-1'>+</label>
+                                    <label htmlFor="fileupload" className='h-explore_image_height aspect-square bg-blue-200 hover:bg-blue-300 active:bg-blue-400 flex items-center justify-center rounded-default text-xl mb-1 mr-1'>+</label>
                                     <div className="h-explore_image_height aspect-square">
                                         <RemovablePicture pic={"https://picsum.photos/200/200"} remove={()=>{console.log("test")}}/>
                                     </div>
-                                    <input type="file" id="fileupload" onInput={uploadPicture}/>
+                                    <input className="hidden" type="file" id="fileupload" onInput={uploadPicture}/>
                                 </div>
                             </div>
                     </div>
