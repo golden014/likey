@@ -28,12 +28,8 @@ const ProfilePage: any = () => {
             photo_link: [],
             likey_coin: -999,
             current_swipe: -999,
-<<<<<<< Updated upstream
-            filter_access: false
-=======
             filter_access: false,
             last_swipe_index: 0
->>>>>>> Stashed changes
         }
     )
 
@@ -145,12 +141,8 @@ const ProfilePage: any = () => {
                 photo_link: x['photo_link'],
                 likey_coin: x['likey_coin'],
                 current_swipe: x['current_swipe'],
-<<<<<<< Updated upstream
-                filter_access: x['filter_access']
-=======
                 filter_access: x['filter_access'],
                 last_swipe_index: x['last_swipe_index']
->>>>>>> Stashed changes
             })
         }
     }
