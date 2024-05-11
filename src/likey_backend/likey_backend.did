@@ -98,6 +98,7 @@ service : {
   test_get_age : (text) -> (int32) query;
   update_hobby : (Hobby) -> (Result_5);
   update_interest : (AddInterestPayload) -> (Result);
+  update_interest : (UpdateIsInterestedPayload) -> (Result);
   update_reveal : (UpdateIsRevealedPayload) -> (Result);
   update_swipe_filter : (blob, vec record { text; FilterAttribute }) -> (
       Result_6,

@@ -2,7 +2,7 @@ import { faCheck, faPenToSquare, faSpinner } from '@fortawesome/free-solid-svg-i
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useState } from 'react'
 
-const EditableField = ({data, func, name} : {data : string, func: any, name:any}) => {
+const EditableField = ({data, func, name} : {data : any, func: any, name:any}) => {
     const [edit, setEdit] = useState("false")
     const [value, setValue] = useState(data)
 
@@ -17,8 +17,8 @@ const EditableField = ({data, func, name} : {data : string, func: any, name:any}
     }
 
     return (
-        <div className='w-full flex flex-row'>
-            <input disabled={edit === "false"} value={value} onChange={(e)=>{setValue(e.target.value)}} type="text" className='text-text w-full h-full p-2 rounded-md rounded-r-none border border-border_placeholder bg-background shadow-xl'/>
+        <div className='w-full flex flex-row h-10'>
+            <input disabled={edit === "false"} value={value} onChange={(e)=>{setValue(typeof data === "number" ? Number(e.target.value) : e.target.value)}} type={typeof data} className='text-text w-full h-full p-2 rounded-md rounded-r-none border border-border_placeholder bg-background shadow-xl'/>
             {(edit == "false") &&
                 <button onClick={()=>{setEdit("true")}} className='w-10 h-full bg-blue-200 hover:bg-blue-300 active:bg-blue-400 rounded-r-md'>
                     <FontAwesomeIcon icon={faPenToSquare} />

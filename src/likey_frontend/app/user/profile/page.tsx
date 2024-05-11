@@ -8,6 +8,8 @@ import EditableField from "@/app/component/editableField";
 import { likey_backend } from "../../../../declarations/likey_backend";
 import { getUserDataFromDB, getUserDataFromStorage } from "@/app/utility/userDataController";
 import Dropdown from "@/app/component/dropdown";
+import EditablePicture from "@/app/component/editablePicture";
+import RemovablePicture from "@/app/component/removablePicture";
 
 const ProfilePage: any = () => {
 
@@ -95,6 +97,12 @@ const ProfilePage: any = () => {
         await fetchUserData()
     }
 
+    const changePicture = (async(newLink:any)=>{
+        await handleChange("profile_picture_link", newLink)
+    })
+
+    const uploadPicture = () =>{}
+
     const fetchUserData = async() => {
         // //dummy
         // const dummy: UserData = {
@@ -150,11 +158,9 @@ const ProfilePage: any = () => {
             {user &&
                 <>
                     <div className='w-3/5 h-full relative'>
-                        <div className='w-full h-full'>
-                            <Image src={user?.profile_picture_link} className='w-full h-full rounded-default border border-border_placeholder shadow-2xl object-cover' height={1000} width={1000} alt='missing'/>
-                        </div>
+                        <EditablePicture pic={user.profile_picture_link} update={changePicture}/> 
                     </div>
-                    <div className='w-2/5 h-full relative px-10 space-y-3'>
+                    <div className='w-2/5 h-full relative px-10 space-y-2'>
                         <div className="w-full flex flex-row content-evenly">
                             <div className="flex flex-col w-1/2 px-1">
                                 <p className="text-xs text-gray-400">First Name</p>
@@ -163,6 +169,18 @@ const ProfilePage: any = () => {
                             <div className="flex flex-col w-1/2 px-1">
                                 <p className="text-xs text-gray-400">Last Name</p>
                                 <EditableField name="last_name" func={handleChange} data={user.last_name}/>
+                            </div>
+                        </div>
+                        <div className="w-full">
+                            <div className="flex flex-col w-full px-1">
+                                <p className="text-xs text-gray-400">Description</p>
+                                <EditableField name="description" func={handleChange} data={user.description}/>
+                            </div>
+                        </div>
+                        <div className="w-full">
+                            <div className="flex flex-col w-full px-1">
+                                <p className="text-xs text-gray-400">Height</p>
+                                <EditableField name="height" func={handleChange} data={user.height}/>
                             </div>
                         </div>
                         <div className="w-full">
@@ -177,9 +195,20 @@ const ProfilePage: any = () => {
                                 <Dropdown name="religion" func= {handleChange} data={user.religion} options={religionData}/>
                             </div>
                         </div>
+
+                        <div className="flex flex-col w-full h-72 px-1">
+                                <p className="text-xs text-gray-400">Pictures of you</p>
+                                <div className="w-full flex flex-row flex-wrap overflow-scroll">
+                                    <label htmlFor="fileupload" className='h-explore_image_height aspect-square bg-blue-200 hover:bg-blue-300 active:bg-blue-400 rounded-default text-xl mb-1 mr-1'>+</label>
+                                    <div className="h-explore_image_height aspect-square">
+                                        <RemovablePicture pic={"https://picsum.photos/200/200"} remove={()=>{console.log("test")}}/>
+                                    </div>
+                                    <input type="file" id="fileupload" onInput={uploadPicture}/>
+                                </div>
+                            </div>
                     </div>
                 </>
-            }  
+            }
             </div>
         </div>
     );
