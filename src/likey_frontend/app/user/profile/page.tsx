@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { UpdateUserPayload, UserData } from "../../model";
 import { EDUCATIONS, RELIGIONS } from "@/app/data";
 import Navbar from "@/app/component/navbar";
@@ -10,6 +10,9 @@ import { getUserDataFromDB, getUserDataFromStorage } from "@/app/utility/userDat
 import Dropdown from "@/app/component/dropdown";
 import EditablePicture from "@/app/component/editablePicture";
 import RemovablePicture from "@/app/component/removablePicture";
+import { uuid } from "uuidv4";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { storage } from "@/app/firebaseConfig";
 
 const ProfilePage: any = () => {
 
@@ -71,7 +74,10 @@ const ProfilePage: any = () => {
         setUser(prevData => ({
             ...prevData, [name] : value
         }))
-        // console.log(Object.values(user.user_id))
+        console.log(Object.values(user.photo_link))
+        console.log("----tes");
+        
+        console.log(Object.values(user.user_id))
 
         // console.log(user)
 
@@ -83,7 +89,7 @@ const ProfilePage: any = () => {
             first_name: user.first_name,
             last_name: user.last_name,
             religion: user.religion,
-            photo_link: user.photo_link
+            photo_link: Object.values(user.photo_link)
         }
 
         const newpayload = {
@@ -93,6 +99,7 @@ const ProfilePage: any = () => {
         console.log(newpayload)
 
         const newdata = await likey_backend.update_user(Object.values(user.user_id), newpayload)
+
         console.log(newdata)
         await getUserDataFromDB(Object.values(user.user_id))
         await fetchUserData()
@@ -102,7 +109,30 @@ const ProfilePage: any = () => {
         await handleChange("profile_picture_link", newLink)
     })
 
-    const uploadPicture = () =>{}
+    const removePicture = async(url:string) =>{
+        let x = user.photo_link
+        let index = x.indexOf(url)
+        console.log(index)
+        x.splice(x.indexOf(url), 1)
+        console.log(x)
+        await handleChange('photo_link', x)
+    }
+
+    const uploadPicture = async(e: ChangeEvent<HTMLInputElement>)=>{
+        console.log(user.photo_link)
+        const fileId = uuid()
+        if(e.target.files){
+            const imageRef = ref(storage, fileId)
+            uploadBytes(imageRef, e.target.files[0]).then((e)=>{
+                getDownloadURL(e.ref).then((url)=>{
+                    let x = user.photo_link
+                    x.push(url)
+
+                    handleChange('photo_link', x)
+                })
+            })
+        }
+    }
 
     const fetchUserData = async() => {
         // //dummy
@@ -144,6 +174,7 @@ const ProfilePage: any = () => {
                 filter_access: x['filter_access'],
                 last_swipe_index: x['last_swipe_index']
             })
+            console.log(x)
         }
     }
 
@@ -201,9 +232,15 @@ const ProfilePage: any = () => {
                                 <p className="text-xs text-gray-400">Pictures of you</p>
                                 <div className="w-full flex flex-row flex-wrap overflow-scroll">
                                     <label htmlFor="fileupload" className='h-explore_image_height aspect-square bg-blue-200 hover:bg-blue-300 active:bg-blue-400 flex items-center justify-center rounded-default text-xl mb-1 mr-1'>+</label>
-                                    <div className="h-explore_image_height aspect-square">
-                                        <RemovablePicture pic={"https://picsum.photos/200/200"} remove={()=>{console.log("test")}}/>
-                                    </div>
+                                    {
+                                        user.photo_link.map((photo)=>{
+                                            return(
+                                                <div className="h-explore_image_height aspect-square" key={photo}>
+                                                    <RemovablePicture pic={photo} remove={removePicture}/>
+                                                </div>
+                                            )
+                                        })
+                                    }
                                     <input className="hidden" type="file" id="fileupload" onInput={uploadPicture}/>
                                 </div>
                             </div>

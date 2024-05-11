@@ -1,6 +1,6 @@
 import { faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import {ref} from 'firebase/storage'
+import {deleteObject, ref} from 'firebase/storage'
 import React, { ChangeEvent, useEffect, useState } from 'react'
 import { storage } from '../firebaseConfig'
 
@@ -11,7 +11,11 @@ const RemovablePicture = ({pic, remove} : {pic:any, remove: any}) => {
 
     const action = async()=>{
         setLoading(true)
-        const photoRef = ref(storage, )
+        const photoRef = ref(storage, pic)
+        deleteObject(photoRef).then(()=>{
+            remove(pic)
+            setLoading(false)
+        })
     }
 
     return (
