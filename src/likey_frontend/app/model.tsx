@@ -55,6 +55,7 @@ export interface UserPayloadData {
     // swipe_filters:[[string, FilterAttributeAge],[string, FilterAttributeHeight],[string, FilterAttributeReligion],[string, FilterAttributeGender],[string, FilterAttributeEducation]],
     swipe_filters: [string, FilterAttribute][];
     dob: string,
+    last_swipe_index: number
 } 
 
 export interface Hobby {

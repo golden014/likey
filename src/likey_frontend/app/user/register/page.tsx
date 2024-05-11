@@ -102,6 +102,7 @@ const RegisterPage = () => {
         filter_access: false,
         swipe_filters: swipeFilters,
         dob: "",
+        last_swipe_index: 0
     })
     const [registerHobbyData, setRegisterHobbyData] = React.useState<Hobby>({
         user_id: [],
@@ -208,7 +209,8 @@ const RegisterPage = () => {
             current_swipe: registerData.current_swipe | 0,
             filter_access: registerData.filter_access,
             swipe_filters: swipeFilters,
-            dob: registerData.dob.toString()          
+            dob: registerData.dob.toString()    ,
+            last_swipe_index: registerData.last_swipe_index      
         }
 
         const newdata = await likey_backend.create_user(
