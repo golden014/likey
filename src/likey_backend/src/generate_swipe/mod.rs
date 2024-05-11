@@ -8,7 +8,7 @@ use ic_stable_structures::storable::Blob;
 use crate::{Error, FilterAttribute, User, _get_user, date_helper::{self, get_age}, SwipePool, SWIPE_POOL_STORAGE, USER_STORAGE};
 
 
-pub(crate) fn generate_swipe(user_id: Vec<u8>) -> Option<Vec<Vec<u8>>>{
+pub(crate) fn generate_swipe(user_id: &Vec<u8>) -> Option<Vec<Vec<u8>>>{
 
     //TODO: tambahin constraint filter access
 

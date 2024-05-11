@@ -30,6 +30,7 @@ static REVEAL_COST: i32 = 10; //per person revealed
 static FILTER_ACCESS_COST: i32 = 100; //one time buy
 static ADD_SWIPE_COST: i32 = 5; // per swipe
 static ROLLBACK_COST: i32 = 10; //per person rollbacked
+static SWIPE_LIMIT_DEFAULT_PER_DAY: i32 = 30; //the swipe limit of each user per day by default
 
 #[derive(candid::CandidType, Clone, Serialize, Deserialize, Default)]
 struct User {
@@ -253,10 +254,23 @@ fn add_interest(data: AddInterestPayload) -> Result<Option<Interest>, Error> {
         return Err(Error::InvalidPayloadData { msg: "invalid user id".to_string() });
     }
 
+    //check if the swipe balance is valid or not
+    let swipe_balance_valid = current_swipe_valid(&user_source);
+
+    if swipe_balance_valid == false {
+        return Err(Error::InvalidPayloadData { msg: "User's swipe balance is not enough".to_string() })
+    }
+
+    let user_id_source_clone = data.user_id_source.clone();
     let new_interest = Interest { user_id_source: data.user_id_source, user_id_destination: data.user_id_destination, is_interested: data.is_interested, is_revealed: false };
 
+    //push the new interest
     match INTEREST_STORAGE.with(|service| service.borrow_mut().push(&new_interest)) {
-        Ok(_) => Ok(Some(new_interest)),
+        Ok(_) => {
+            //update the current swipe balance of the user and the last index
+            update_swipe_attribute_helper(&user_id_source_clone);
+            Ok(Some(new_interest))
+        },
         Err(_) => Err(Error::NotFound { msg: "Error adding new interest".to_string() })
     }
 }
@@ -518,7 +532,7 @@ fn test_get_age(dob: String) -> i32 {
 
 
 fn _generate_swipe_by_id(id: Vec<u8>) -> Option<Vec<Vec<u8>>> {
-    generate_swipe::generate_swipe(id)
+    generate_swipe::generate_swipe(&id)
 }
 
 //Greet
@@ -629,7 +643,6 @@ fn feature_payment(id: Vec<u8>, purchase_type: u8) -> Result<User, Error>{
 #[ic_cdk::update]
 fn get_feeds(id: Vec<u8>) -> Result<Option<Vec<User>>, Error> {
     //check if the feeds for the user for today's date already generated or not
-
     //date format = yyyy-mm-dd
     let curr_date = date_helper::get_current_date();
     let mut already_generated = false;
@@ -652,9 +665,10 @@ fn get_feeds(id: Vec<u8>) -> Result<Option<Vec<User>>, Error> {
     }
 
     //else: generate user's swipe pool
-    match generate_swipe::generate_swipe(id) {
+    match generate_swipe::generate_swipe(&id) {
         Some(ids) => {
-           Ok(Some(_get_multiple_user_by_ids(ids)))
+            reset_swipe_attribute_helper(&id);
+            Ok(Some(_get_multiple_user_by_ids(ids)))
         },
         None => Err(Error::NotFound { msg: "Error while generating feeds".to_string() }),
     }
@@ -744,6 +758,16 @@ fn rollback_user(user_id_source: Vec<u8>, user_id_dest: Vec<u8>) -> Result<bool,
     }
 }
 
+#[ic_cdk::query]
+fn get_last_swipe_index_by_user_id(user_id: Vec<u8>) -> Result<i32, Error> {
+    let user = _get_user(&user_id);
+
+    match user {
+        Some(user) => Ok(user.last_swipe_index),
+        None =>  Err(Error::InvalidPayloadData { msg: "Invalid user id".to_string() })
+    }
+}
+
 fn _update_interest_helper(data_before: Interest, data_after: Interest) -> Option<Interest> {
     let index = INTEREST_STORAGE.with(|s| {
         s.borrow().iter().position(|i| i == data_before)
@@ -781,5 +805,43 @@ fn _get_multiple_user_by_ids(user_ids: Vec<Vec<u8>>) -> Vec<User> {
     })    
 }
 
+fn current_swipe_valid(user: &Option<User>) -> bool {
+    match user {
+        Some(user) => {
+            if user.current_swipe > 0 {
+                return true
+            }
+        },
+        None => return false,
+    }
+
+    return false
+}
+
+fn update_swipe_attribute_helper(user_id: &Vec<u8>) {
+    let user = _get_user(&user_id);
+
+    match user {
+        Some(mut user) => {
+            user.current_swipe = user.current_swipe - 1;
+            user.last_swipe_index = user.last_swipe_index + 1;
+            do_insert_user(&user);
+        },
+        None => {},
+    }
+}
+
+fn reset_swipe_attribute_helper(user_id: &Vec<u8>) {
+    let user = _get_user(&user_id);
+
+    match user {
+        Some(mut user) => {
+            user.current_swipe = SWIPE_LIMIT_DEFAULT_PER_DAY;
+            user.last_swipe_index = 0;
+            do_insert_user(&user);
+        },
+        None => {},
+    }
+}
 
 ic_cdk::export_candid!();
