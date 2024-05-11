@@ -6,10 +6,16 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFilter, faHeart, faHeartBroken, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 import { DUMMY_PROFILE, HOBBIES } from '../dummy_data';
 import { getUserDataFromStorage } from '../utility/userDataController';
+import { dec } from '../utility/cryptController';
+import { getCookie } from 'cookies-next';
 
 const Page = async () => {
     const user = await getUserDataFromStorage()
     console.log(user)   
+
+    let cook = await dec(getCookie("my_principal_id")||"")
+    let afterParse = JSON.parse(cook||"{}")
+    console.log(afterParse) 
     return (
       <div className='w-screen h-screen bg-background flex justify-around items-center'>
         

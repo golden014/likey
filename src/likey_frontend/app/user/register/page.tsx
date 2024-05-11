@@ -1,6 +1,6 @@
 "use client"
 import React, { useEffect, useState } from 'react'
-import { Hobby, RegisterDataType, UserData, UserPayloadData } from '../../model'
+import { Hobby, HobbyPayload, RegisterDataType, UserData, UserPayloadData } from '../../model'
 import PhotoUpload from './photo'
 import Biodata from './biodoata'
 import InterestPage from './hobby'
@@ -9,6 +9,7 @@ import { getCookie, hasCookie } from 'cookies-next'
 import { dec } from '@/app/utility/cryptController'
 import { useRouter } from 'next/navigation'
 import { likey_backend } from '../../../../declarations/likey_backend'
+import { getUserDataFromDB } from '@/app/utility/userDataController'
 
 const RegisterPage = () => {
     const router = useRouter()
@@ -104,6 +105,7 @@ const RegisterPage = () => {
         dob: "",
         last_swipe_index: 0
     })
+
     const [registerHobbyData, setRegisterHobbyData] = React.useState<Hobby>({
         user_id: [],
         name: [],
@@ -122,25 +124,33 @@ const RegisterPage = () => {
         console.log(registerData)
      }, [registerData])
 
-    const handleHobby = (name : string) => {
-        const arrayOfHobbies = registerHobbyData.name
+    const handleHobby = async (name : string) => {
+        // const arrayOfHobbies = registerHobbyData.name
 
-        const index = arrayOfHobbies.indexOf(name)
+        // const index = arrayOfHobbies.indexOf(name)
 
-        console.log("hobby");
+        // console.log("hobby");
         
 
-        if(index !== -1){
-            console.log("remove hobby");
+        // if(index !== -1){
+        //     console.log("remove hobby");
             
-            arrayOfHobbies.splice(index, 1)
-        }
-        else{
-            console.log("added hobby");
+        //     arrayOfHobbies.splice(index, 1)
+        // }
+        // else{
+        //     console.log("added hobby");
             
-            arrayOfHobbies.push(name)
+        //     arrayOfHobbies.push(name)
+        // }
+        let cook = await dec(getCookie("my_principal_id")||"")
+        let afterParse = JSON.parse(cook||"{}")
+        console.log(afterParse) 
+        const hobbyPayload : HobbyPayload = {
+            user_id: afterParse,
+            name: name
         }
-        
+        const hobby = await likey_backend.update_hobby(hobbyPayload)
+        console.log(hobby)        
     }
 
     const nextPage = () => {
@@ -216,7 +226,9 @@ const RegisterPage = () => {
         const newdata = await likey_backend.create_user(
             payload
         ).then(
-            ()=>{
+            async ()=>{
+                const user = await getUserDataFromDB(afterParse)
+                console.log(user)
                 router.push('/explore')
             }
         )
@@ -224,9 +236,6 @@ const RegisterPage = () => {
         // const userData = await getUserDataFromDB(Object.values(user.user_id))
         // console.log("line 186", userData)
         // await fetchUserData()
-
-        
-        
     }
 
     const handleRegister = ()=>{

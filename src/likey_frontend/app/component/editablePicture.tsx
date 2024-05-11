@@ -9,7 +9,6 @@ const EditablePicture = ({pic, update} : {pic:any, update: any}) => {
     const [edit, setEdit] = useState(false)
     const [loading, setLoading] = useState(false)
 
-
     const action = async(e: ChangeEvent<HTMLInputElement>)=>{
         console.log(e)
         setLoading(true)

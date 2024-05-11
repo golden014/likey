@@ -78,6 +78,15 @@ export interface UserData{
     likey_coin: number,
     current_swipe: number,
     filter_access: boolean,
+<<<<<<< Updated upstream
+=======
+    last_swipe_index: number
+}
+
+export interface HobbyPayload{
+    user_id: number[],
+    name: string
+>>>>>>> Stashed changes
 }
 
 export interface Chat{
@@ -101,7 +110,11 @@ export interface UpdateUserPayload{
     religion: string,
     description: string,
     profile_picture_link: string,
+<<<<<<< Updated upstream
     photo_link: string[]
+=======
+    photo_link:string[]
+>>>>>>> Stashed changes
 }
 
 export interface UpdateUserCoinPayload{
