@@ -21,16 +21,22 @@ type Interest = record {
   is_interested : bool;
   is_revealed : bool;
 };
-type Result = variant { Ok : opt Interest; Err : Error };
+type Result = variant { Ok : opt SwipeMatchReturn; Err : Error };
 type Result_1 = variant { Ok : opt User; Err : Error };
 type Result_2 = variant { Ok : User; Err : Error };
 type Result_3 = variant { Ok : opt vec User; Err : Error };
 type Result_4 = variant { Ok : int32; Err : Error };
 type Result_5 = variant { Ok : bool; Err : Error };
 type Result_6 = variant { Ok : opt Hobby; Err : Error };
-type Result_7 = variant {
+type Result_7 = variant { Ok : opt Interest; Err : Error };
+type Result_8 = variant {
   Ok : opt vec record { text; FilterAttribute };
   Err : Error;
+};
+type SwipeMatchReturn = record {
+  is_matched : bool;
+  user_id_source : blob;
+  user_id_dest : blob;
 };
 type UpdateIsRevealedPayload = record {
   user_id_source : blob;
@@ -102,10 +108,10 @@ service : {
   test_get_age : (text) -> (int32) query;
   update_coin : (blob, UpdateUserCoinPayload) -> (Result_2);
   update_hobby : (Hobby) -> (Result_6);
-  update_interest : (AddInterestPayload) -> (Result);
-  update_reveal : (UpdateIsRevealedPayload) -> (Result);
+  update_interest : (AddInterestPayload) -> (Result_7);
+  update_reveal : (UpdateIsRevealedPayload) -> (Result_7);
   update_swipe_filter : (blob, vec record { text; FilterAttribute }) -> (
-      Result_7,
+      Result_8,
     );
   update_user : (blob, UserProfilePayload) -> (Result_2);
 }
