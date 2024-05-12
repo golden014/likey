@@ -112,3 +112,22 @@ export interface UpdateUserPayload{
 export interface UpdateUserCoinPayload{
     likey_coin: number
 }
+
+export interface FeedProfile {
+    dob: string;
+    height: number;
+    profile_picture_link: string;
+    education: number;
+    description: string;
+    user_id: number[];
+    gender: string;
+    first_name: string;
+    last_name: string;
+    religion: string;
+    photo_link: string[];
+}
+
+export interface UserHobby {
+    name : string,
+    user_id : number[]
+}

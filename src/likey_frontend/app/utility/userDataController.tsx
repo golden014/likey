@@ -33,3 +33,8 @@ export const getUserDataFromStorage = async () => {
     let cook = await dec(getCookie("user-data") || "")
     return JSON.parse(cook || "{}")
 }
+
+export const getUserData = async(id : number[]) => {
+    const data= await likey_backend.get_user(id)
+    return data
+}
