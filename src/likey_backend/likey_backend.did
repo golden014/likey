@@ -25,9 +25,10 @@ type Result = variant { Ok : opt Interest; Err : Error };
 type Result_1 = variant { Ok : opt User; Err : Error };
 type Result_2 = variant { Ok : User; Err : Error };
 type Result_3 = variant { Ok : opt vec User; Err : Error };
-type Result_4 = variant { Ok : bool; Err : Error };
-type Result_5 = variant { Ok : opt Hobby; Err : Error };
-type Result_6 = variant {
+type Result_4 = variant { Ok : int32; Err : Error };
+type Result_5 = variant { Ok : bool; Err : Error };
+type Result_6 = variant { Ok : opt Hobby; Err : Error };
+type Result_7 = variant {
   Ok : opt vec record { text; FilterAttribute };
   Err : Error;
 };
@@ -91,18 +92,20 @@ service : {
   get_all_hobby_by_user_id : (blob) -> (vec Hobby) query;
   get_all_interest_by_user_id : (blob) -> (vec Interest) query;
   get_feeds : (blob) -> (Result_3);
+  get_interested_history : (blob) -> (vec User) query;
+  get_last_swipe_index_by_user_id : (blob) -> (Result_4) query;
   get_not_interested_history : (blob) -> (vec User) query;
   get_user : (blob) -> (Result_2) query;
   greet : (text) -> (text) query;
-  rollback_user : (blob, blob) -> (Result_4);
+  rollback_user : (blob, blob) -> (Result_5);
   test_date : () -> (text) query;
   test_get_age : (text) -> (int32) query;
   update_coin : (blob, UpdateUserCoinPayload) -> (Result_2);
-  update_hobby : (Hobby) -> (Result_5);
+  update_hobby : (Hobby) -> (Result_6);
   update_interest : (AddInterestPayload) -> (Result);
   update_reveal : (UpdateIsRevealedPayload) -> (Result);
   update_swipe_filter : (blob, vec record { text; FilterAttribute }) -> (
-      Result_6,
+      Result_7,
     );
   update_user : (blob, UserProfilePayload) -> (Result_2);
 }
