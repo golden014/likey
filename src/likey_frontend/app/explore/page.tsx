@@ -20,7 +20,9 @@ const Page = () => {
 
     const generateFeed = async() => {
         const id = user?.user_id || [1]
+        console.log(id)
         const data : any = await getFeeds(id)
+        console.log(data)
 
         const index : any = await getUserData(id)
 
@@ -33,12 +35,18 @@ const Page = () => {
     React.useEffect(()=> {
 
         const fetchUserData = async() => {
-            let cook = await dec(getCookie("my_principal_id")||"")
+            // let cook = await dec(getCookie("my_principal_id")||"")
+            // console.log(cook)
 
-            // nembak ID karena tidak bisa akses II punya ID
+            // // nembak ID karena tidak bisa akses II punya ID
             // let afterParse = JSON.parse(cook||"{}")
-            let afterParse = [1]
-            const userData : any = await getUserData(afterParse)
+            // console.log(afterParse)
+            // // let afterParse = [1]
+            // const userData : any = await getUserData(afterParse)
+            // console.log(userData)
+
+            const userData:any = await getUserDataFromStorage()
+            console.log(userData)
             
             setUser(userData)
         }
