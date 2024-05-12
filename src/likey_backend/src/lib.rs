@@ -2,6 +2,7 @@
 extern crate serde;
 extern crate argon2;
 use candid::{Decode, Encode};
+use ic_cdk::api::time;
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
 use ic_stable_structures::storable::Blob;
 use ic_stable_structures::{BoundedStorable, DefaultMemoryImpl, StableBTreeMap, Storable, StableVec};
@@ -22,6 +23,7 @@ use std::{self};
 pub mod generate_swipe;
 pub mod date_helper;
 mod permission_helper;
+pub mod random_helper;
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 // type IdCell = Cell<u64, Memory>;
@@ -447,12 +449,12 @@ fn get_all_hobby_by_user_id(user_id: Vec<u8>) -> Vec<Hobby> {
 }
 
 //get all interest by user (where the user is the user source)
-#[ic_cdk::query]
-fn get_all_interest_by_user_id(user_id: Vec<u8>) -> Vec<Interest> {
+// #[ic_cdk::query]
+fn _get_all_interest_by_user_id(user_id: &Vec<u8>) -> Vec<Interest> {
     let mut output: Vec<Interest> = Vec::new();
     INTEREST_STORAGE.with(|s| {
         for i in s.borrow().iter() {
-            if i.user_id_source == user_id {
+            if i.user_id_source == *user_id {
                 output.push(i)
             }
         }
@@ -695,9 +697,13 @@ fn get_feeds(id: Vec<u8>) -> Result<Option<Vec<User>>, Error> {
     }
 
     //else: generate user's swipe pool
+
+    //reset the swipe attribute
+    reset_swipe_attribute_helper(&id);
+
+    //generate the user
     match generate_swipe::generate_swipe(&id) {
         Some(ids) => {
-            reset_swipe_attribute_helper(&id);
             Ok(Some(_get_multiple_user_by_ids(ids)))
         },
         None => Err(Error::NotFound { msg: "Error while generating feeds".to_string() }),
@@ -740,6 +746,7 @@ fn add_swipe(user_id: Vec<u8>, swipe_amount: i32) -> Result<Option<User>, Error>
             user.current_swipe = user.current_swipe + swipe_amount;
             user.likey_coin = user.likey_coin - (ADD_SWIPE_COST * swipe_amount);
             do_insert_user(&user);
+            generate_swipe::generate_swipe(&user_id);
             return Ok(Some(user));
         },
         None => return Err(Error::NotFound { msg: "User id not found".to_string() }),
@@ -755,7 +762,7 @@ fn rollback_user(user_id_source: Vec<u8>, user_id_dest: Vec<u8>) -> Result<bool,
     let interest = interest_exist(&user_id_source, &user_id_dest);
 
     match interest {
-        Some(mut interest) => {
+        Some(interest) => {
             if interest.is_interested == false {
                 let coin_enough = permission_helper::coin_sufficient(&user_id_source, ROLLBACK_COST);
 
@@ -796,6 +803,12 @@ fn get_last_swipe_index_by_user_id(user_id: Vec<u8>) -> Result<i32, Error> {
         Some(user) => Ok(user.last_swipe_index),
         None =>  Err(Error::InvalidPayloadData { msg: "Invalid user id".to_string() })
     }
+}
+
+#[ic_cdk::query]
+fn test_rand(mut vec: Vec<u8>) -> Vec<u8> {
+    random_helper::shuffle(&mut vec, time());
+    vec
 }
 
 fn _update_interest_helper(data_before: Interest, data_after: Interest) -> Option<Interest> {
