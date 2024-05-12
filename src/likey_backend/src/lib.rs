@@ -229,6 +229,13 @@ struct UpdateIsRevealedPayload {
     is_revealed: bool,
 }
 
+#[derive(candid::CandidType, Serialize, Deserialize, Default)]
+struct SwipeMatchReturn {
+    user_id_source: Vec<u8>,
+    user_id_dest: Vec<u8>,
+    is_matched: bool
+}
+
 #[derive(candid::CandidType, Deserialize, Serialize)]
 enum Error {
     NotFound { msg: String },
@@ -246,7 +253,7 @@ enum FilterAttribute {
 
 //add interest -> swiping
 #[ic_cdk::update]
-fn add_interest(data: AddInterestPayload) -> Result<Option<Interest>, Error> {
+fn add_interest(data: AddInterestPayload) -> Result<Option<SwipeMatchReturn>, Error> {
     let user_source = _get_user(&data.user_id_source);
     let user_destination = _get_user(&data.user_id_destination);
 
@@ -262,6 +269,9 @@ fn add_interest(data: AddInterestPayload) -> Result<Option<Interest>, Error> {
     }
 
     let user_id_source_clone = data.user_id_source.clone();
+    let user_id_dest_clone = data.user_id_destination.clone();
+
+
     let new_interest = Interest { user_id_source: data.user_id_source, user_id_destination: data.user_id_destination, is_interested: data.is_interested, is_revealed: false };
 
     //push the new interest
@@ -269,7 +279,10 @@ fn add_interest(data: AddInterestPayload) -> Result<Option<Interest>, Error> {
         Ok(_) => {
             //update the current swipe balance of the user and the last index
             update_swipe_attribute_helper(&user_id_source_clone);
-            Ok(Some(new_interest))
+
+            let is_match = check_is_match(&user_id_source_clone, &data.is_interested, &user_id_dest_clone);
+            let out = SwipeMatchReturn{ user_id_source: user_id_source_clone, user_id_dest: user_id_dest_clone, is_matched: is_match};
+            Ok(Some(out))
         },
         Err(_) => Err(Error::NotFound { msg: "Error adding new interest".to_string() })
     }
@@ -441,6 +454,23 @@ fn get_all_interest_by_user_id(user_id: Vec<u8>) -> Vec<Interest> {
         for i in s.borrow().iter() {
             if i.user_id_source == user_id {
                 output.push(i)
+            }
+        }
+    });
+    output
+}
+
+//get all user that the specifed user interested in
+#[ic_cdk::query]
+fn get_interested_history(user_id: Vec<u8>) -> Vec<User> {
+    let mut output: Vec<User> = Vec::new();
+    INTEREST_STORAGE.with(|s| {
+        for i in s.borrow().iter() {
+            if (i.user_id_source == user_id ) && (i.is_interested == true){
+                match _get_user(&i.user_id_destination){
+                    Some(user) => output.push(user),
+                    None => {},
+                }  
             }
         }
     });
@@ -842,6 +872,23 @@ fn reset_swipe_attribute_helper(user_id: &Vec<u8>) {
         },
         None => {},
     }
+}
+
+fn check_is_match(user_id_source: &Vec<u8>, user_id_source_interest: &bool, user_id_dest: &Vec<u8>) -> bool {
+
+    //if the user source is not interested, return false
+    if *user_id_source_interest == false {
+        return false
+    }
+    //check if the user dest like the user source
+    INTEREST_STORAGE.with(|s| {
+        for i in s.borrow().iter() {
+            if (i.user_id_source == *user_id_dest) && (i.user_id_destination == *user_id_source) && (i.is_interested == true){
+                return true
+            }
+        }
+        return false
+    })
 }
 
 ic_cdk::export_candid!();

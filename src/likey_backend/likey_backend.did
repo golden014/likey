@@ -92,6 +92,7 @@ service : {
   get_all_hobby_by_user_id : (blob) -> (vec Hobby) query;
   get_all_interest_by_user_id : (blob) -> (vec Interest) query;
   get_feeds : (blob) -> (Result_3);
+  get_interested_history : (blob) -> (vec User) query;
   get_last_swipe_index_by_user_id : (blob) -> (Result_4) query;
   get_not_interested_history : (blob) -> (vec User) query;
   get_user : (blob) -> (Result_2) query;
