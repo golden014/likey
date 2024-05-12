@@ -1,16 +1,36 @@
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import Image from 'next/image';
 import React, { useState, ChangeEvent } from 'react';
+import { uuid } from 'uuidv4';
+import { storage } from "@/app/firebaseConfig";
 
-const PhotoUpload = ({goNext } : {goNext: () => void}) => {
+const PhotoUpload = ({ pushValueToArray, goNext} : {pushValueToArray: (newValue: string) => void, goNext: () => void}) => {
     const [selectedImages, setSelectedImages] = useState<(File | null)[]>(Array(6).fill(null));
+
+    
+    const uploadPicture = async(e: ChangeEvent<HTMLInputElement>)=>{
+        // console.log(user.photo_link)
+        const fileId = uuid()
+        if(e.target.files){
+            const imageRef = ref(storage, fileId)
+            uploadBytes(imageRef, e.target.files[0]).then((e)=>{
+                getDownloadURL(e.ref).then((url)=>{
+                    //???????????????????
+                    console.log(url)
+                    pushValueToArray(url)
+                })
+            })
+        }
+    }
 
     const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
-        const file = e.target.files[0];
-        const newImages = [...selectedImages];
-        newImages[selectedImages.filter(image => image !== null).length] = file;
-        console.log("line 12 photo" , file)
-        setSelectedImages(newImages);
+            const file = e.target.files[0];
+            const newImages = [...selectedImages];
+            newImages[selectedImages.filter(image => image !== null).length] = file;
+            console.log("line 12 photo" , file)
+            setSelectedImages(newImages);
+            uploadPicture(e)
         }
     };
 

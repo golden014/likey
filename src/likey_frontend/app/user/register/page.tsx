@@ -10,6 +10,7 @@ import { dec } from '@/app/utility/cryptController'
 import { useRouter } from 'next/navigation'
 import { likey_backend } from '../../../../declarations/likey_backend'
 import { getUserDataFromDB } from '@/app/utility/userDataController'
+import { escape } from 'querystring'
 
 const RegisterPage = () => {
     const router = useRouter()
@@ -113,7 +114,35 @@ const RegisterPage = () => {
 
     const [page, setPage] = React.useState(1)
     
-    const handleChanges = (fieldName: string, value: string) => {
+    const [photoLinkStringArray, setPhotoLinkStringArray] = React.useState<string[]>([]);
+    
+    // Function to handle pushing a new value into the array
+    const pushValueToArray = (newValue: string) => {
+        console.log("line 120", newValue)
+        if(photoLinkStringArray.length == 0){
+            photoLinkStringArray.push(newValue)
+            console.log(photoLinkStringArray)
+        }
+        else{
+            photoLinkStringArray.push(newValue)
+            console.log(photoLinkStringArray.length)
+            console.log("aa", photoLinkStringArray)
+            setPhotoLinkStringArray(prevArray => [...prevArray, newValue]);
+            console.log(photoLinkStringArray)
+        }
+        
+        handleChangesPhoto('photo_link', photoLinkStringArray)
+    };
+
+
+    const handleChanges = (fieldName: string, value: string) =>  {
+        setRegisterData(prevData => ({
+            ...prevData, [fieldName] : value
+          }))
+        console.log(registerData)
+    }
+
+    const handleChangesPhoto = (fieldName: string, value: string[]) => {
         setRegisterData(prevData => ({
             ...prevData, [fieldName] : value
           }))
@@ -122,7 +151,7 @@ const RegisterPage = () => {
 
     useEffect(() => {
         console.log(registerData)
-     }, [registerData])
+     }, [registerData, photoLinkStringArray])
 
     const handleHobby = async (name : string) => {
         // const arrayOfHobbies = registerHobbyData.name
@@ -250,7 +279,7 @@ const RegisterPage = () => {
         }
         else if(page == 2){
             return(
-                <PhotoUpload goNext={nextPage}/>
+                <PhotoUpload goNext={nextPage} pushValueToArray={pushValueToArray}/>
             )
         }
         else if(page == 3){
