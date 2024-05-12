@@ -447,6 +447,23 @@ fn get_all_interest_by_user_id(user_id: Vec<u8>) -> Vec<Interest> {
     output
 }
 
+//get all user that the specifed user interested in
+#[ic_cdk::query]
+fn get_interested_history(user_id: Vec<u8>) -> Vec<User> {
+    let mut output: Vec<User> = Vec::new();
+    INTEREST_STORAGE.with(|s| {
+        for i in s.borrow().iter() {
+            if (i.user_id_source == user_id ) && (i.is_interested == true){
+                match _get_user(&i.user_id_destination){
+                    Some(user) => output.push(user),
+                    None => {},
+                }  
+            }
+        }
+    });
+    output
+}
+
 //history
 #[ic_cdk::query]
 fn get_not_interested_history(user_id: Vec<u8>) -> Vec<User> {
