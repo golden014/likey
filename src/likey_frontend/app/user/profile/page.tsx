@@ -13,6 +13,9 @@ import RemovablePicture from "@/app/component/removablePicture";
 import { uuid } from "uuidv4";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { storage } from "@/app/firebaseConfig";
+import { HOBBIES } from "@/app/dummy_data";
+import Hobby from "@/app/component/hobby";
+import HobbyComponent from "@/app/component/hobby";
 
 const ProfilePage: any = () => {
 
@@ -67,7 +70,28 @@ const ProfilePage: any = () => {
         }
     ]
 
+    const [userHobbies, setUserHobbies] = useState<any>([])
+
+    const fetchHobby = async(id:any) =>{
+        const hobbyFetch : any= await likey_backend.get_all_hobby_by_user_id(Object.values(id))
+        const result:any = []
+        hobbyFetch.map((x:any)=>{
+            result.push(x.name)
+        })
+        setUserHobbies(result)
+    }
+
     const religionData = RELIGIONS.map((r)=>{return {"key": r, "value": r} })
+
+    const handleHobbyChange = async(key:any) =>{
+        const payload = {
+            user_id: Object.values(user.user_id),
+            name: key
+        }
+        await likey_backend.update_hobby(payload)
+        
+        await fetchHobby(user.user_id)
+    }
 
     const handleChange = async(name:any, value:any) =>{
         console.log(name, value, typeof value)
@@ -175,6 +199,7 @@ const ProfilePage: any = () => {
                 last_swipe_index: x['last_swipe_index']
             })
             console.log(x)
+            await fetchHobby(x['user_id'])
         }
     }
 
@@ -192,7 +217,7 @@ const ProfilePage: any = () => {
                     <div className='w-3/5 h-full relative'>
                         <EditablePicture pic={user.profile_picture_link} update={changePicture}/> 
                     </div>
-                    <div className='w-2/5 h-full relative px-10 space-y-2'>
+                    <div className='w-2/5 h-full relative px-10 space-y-2 overflow-y-scroll'>
                         <div className="w-full flex flex-row content-evenly">
                             <div className="flex flex-col w-1/2 px-1">
                                 <p className="text-xs text-gray-400">First Name</p>
@@ -242,6 +267,20 @@ const ProfilePage: any = () => {
                                         })
                                     }
                                     <input className="hidden" type="file" id="fileupload" onInput={uploadPicture}/>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col w-full h-72 px-1">
+                                <p className="text-xs text-gray-400">Hobbies</p>
+                                <div className="w-full flex flex-row flex-wrap overflow-scroll">
+                                    {
+                                        HOBBIES.map((hobby)=>{
+                                            console.log(hobby)
+                                            return(
+                                                <HobbyComponent key={hobby} h={hobby} method={handleHobbyChange} userHobbies={userHobbies}></HobbyComponent>
+                                            )
+                                        })
+                                    }
                                 </div>
                             </div>
                     </div>
