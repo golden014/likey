@@ -128,7 +128,7 @@ const LoginPage = () =>{
                     </a>
                 </div>
             </form>
-            <img src="/images/jojos_pantai.jpeg" className="w-1/2 bg-red-500 h-full cover object-cover rounded-l-xl drop-shadow-xl"/>
+            <img src="/images/merpati.jpg" className="w-1/2 bg-red-500 h-full cover object-cover rounded-l-xl drop-shadow-xl"/>
         </div>
     )
 }

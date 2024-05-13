@@ -87,10 +87,10 @@ export interface HobbyPayload{
 
 export interface Chat{
     id : string,
-    user : number[],
+    user : string[],
     message : [{
         message : string,
-        sender : number,
+        sender : string,
         timestamp : {
             seconds : number,
             nanoseconds : number
@@ -136,4 +136,18 @@ export interface InterestRespond{
     user_id_src : number[] | Uint8Array,
     user_id_dest : number[] | Uint8Array,
     is_interested : boolean
+}
+
+export interface Filter{
+    Religion : string,
+    Gender : string,
+    education : number,
+    Age : {
+        data_start : number,
+        data_end : number
+    },
+    Height : {
+        data_start : number,
+        data_end : number
+    }
 }

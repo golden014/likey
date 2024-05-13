@@ -67,7 +67,7 @@ const HistoryPage:any = () =>{
 
     return(
         <div className='w-screen h-screen bg-background flex justify-around items-center'>
-            <Navbar pageName="Profile"/>
+            <Navbar pageName="History"/>
             <div className='bg-background border-3 border-border_placeholder shadow-2xl h-fit_screen w-page_width rounded-default flex flex-row'>
                 <div className="w-2/5 h-full overflow-y-scroll flex flex-col p-6">
                     <p className="text-title font-bold mb-4">My History</p>

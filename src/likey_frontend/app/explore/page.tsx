@@ -1,5 +1,5 @@
 "use client"
-import React from 'react'
+import React, { ChangeEvent } from 'react'
 import Navbar from '../component/navbar';
 import Image from 'next/image';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -9,18 +9,46 @@ import { getUserData, getUserDataFromStorage } from '../utility/userDataControll
 import { dec } from '../utility/cryptController';
 import { getCookie } from 'cookies-next';
 import { addInterest, getFeeds, getHobby } from '../utility/feedController';
-import { FeedProfile, InterestRespond, UserData, UserHobby } from '../model';
+import { FeedProfile, Filter, InterestRespond, UserData, UserHobby, UserPayloadData } from '../model';
 import Loading from '../utility/loading';
 import { database } from '../firebaseConfig';
-import { addDoc } from 'firebase/firestore';
+import { addDoc, collection } from 'firebase/firestore';
+import { EDUCATIONS, GENDERS, RELIGIONS } from '../data';
+import { updateSwipeFilter } from '../utility/filterController';
 
 const Page = () => {
     
     const [user, setUser] = React.useState<UserData>()
-    const [feed, setFeed]= React.useState<FeedProfile | null>()
+    const [feed, setFeed]= React.useState<FeedProfile | null>({
+        "dob": "2004-03-03",
+        "height": 170,
+        "profile_picture_link": "https://th.bing.com/th/id/OIP.pV2-OydUF2440XkTv1WLTwHaEL?w=313&h=180&c=7&r=0&o=5&pid=1.7",
+        "education": 1,
+        "description": "halo",
+        "user_id": [2],
+        "gender": "Female",
+        "first_name": "Mis",
+        "last_name": "Young",
+        "religion": "Buddha",
+        "photo_link": [
+            "https://th.bing.com/th/id/OIP.pV2-OydUF2440XkTv1WLTwHaEL?w=313&h=180&c=7&r=0&o=5&pid=1.7"
+        ]
+    })
     const [hobbies, setHobby] = React.useState<UserHobby[]>()
+    const [filter, setFilter] = React.useState<Filter>()
+
+    const [modalOpen, setModalOpen] = React.useState(false);
+
+    const handleOpenModal = () => {
+      setModalOpen(true);
+    };
+  
+    const handleCloseModal = () => {
+      setModalOpen(false);
+    };
 
     const generateFeed = async() => {
+        console.log(user)
         const id = user?.user_id || [4]
         console.log(id)
         const data : any = await getFeeds(id)
@@ -28,6 +56,8 @@ const Page = () => {
 
         const index : any = await getUserData(id)
 
+        setFeed(data.Ok[0][index.Ok.last_swipe_index])
+        console.log(data.Ok[0])
         setFeed(data.Ok[0][index.Ok.last_swipe_index])
 
         const hobbyFetch : any= await getHobby(id)
@@ -43,26 +73,51 @@ const Page = () => {
             // // nembak ID karena tidak bisa akses II punya ID
             // let afterParse = JSON.parse(cook||"{}")
             // console.log(afterParse)
-            let afterParse = [4]
+            let afterParse = [1]
             const userData : any = await getUserData(afterParse)
             // console.log(userData)
 
             // const userData:any = await getUserDataFromStorage()
             console.log("DALAM NAMA TUHAN YESUS")
-            console.log(userData)
+            console.log(userData.Ok)
             
             setUser(userData.Ok)
-            generateFeed()
+
+            const id = userData.Ok.user_id
+            console.log(id)
+            const data : any = await getFeeds(id)
+            console.log(data)
+
+            const index : any = await getUserData(id)
+            console.log(index)
+
+            setFeed(data.Ok[0][index.Ok.last_swipe_index])
+            console.log(data.Ok[0])
+            setFeed(data.Ok[0][index.Ok.last_swipe_index])
+
+            const hobbyFetch : any= await getHobby(id)
+            setHobby(hobbyFetch)
+
         }
 
         fetchUserData()
 
     }, [])
 
-    const createChatInFirebase = async() => {
+    const createChatInFirebase = async(user1 : string, user2 : string) => {
 
-        
+        const colRef = collection(database, "chat_room")
 
+        const data = {
+            user : [user1, user2],
+            message : {
+                
+            }
+        }
+
+        const docRef = await addDoc(colRef, data)
+        console.log(docRef)
+        console.log("aman?")
     }
 
     const handleInterest = async(isInterest : boolean) => {
@@ -76,11 +131,40 @@ const Page = () => {
         console.log("aaaa")
         console.log(result)
 
-        if(result.is_interested == true){
-
+        if(result.Ok[0].is_matched == true){
+            console.log("masuk sini")
+            const user1 = Array.from(srcUser).join('')
+            const user2 = Array.from(dstUser).join('')
+            createChatInFirebase(user1, user2)
+        }
+        else{
+            console.log("tidak masuk")
         }
 
         generateFeed()
+    }
+
+    const [minAge, setMinAge] = React.useState<number>(0)
+    const [maxAge, setMaxAge] = React.useState<number>(0)
+    const [minHeight, setMinHeight] = React.useState<number>(0)
+    const [maxHeight, setMaxHeight] = React.useState<number>(0)
+    const [religion, setReligion] = React.useState<string>("")
+    const [education, setEducation] = React.useState<number>(0)
+    const [gender, setGender] = React.useState<string>("")
+
+    const updateFilter = async() => {
+
+        const swipeFilters: UserPayloadData["swipe_filters"] = [
+            ["Age", { Age: { data_start: minAge, data_end: maxAge } }],
+            ["Height", { Height: { data_start: minHeight
+                , data_end: maxHeight } }],
+            ["Religion", { Religion: { data: religion } }],
+            ["Gender", { Gender: { data: gender } }],
+            ["Education", { Education: { data: education } }]
+          ];
+
+          const data = await updateSwipeFilter(user?.user_id || [], swipeFilters)
+
     }
 
     return (
@@ -117,13 +201,89 @@ const Page = () => {
                     {/* Profile */}
                     <div className='w-2/5'>
                         {/* Fitler and remaining swipe */}
-                        <div className='flex justify-end'>
-                            {/* <button className='bg-background flex justify-center border-3 border-border_placeholder p-2 rounded-default shadow-2xl w-photo_form_input' onClick={handleOpenModal}>
+                        <div className='flex justify-around'>
+                            {
+                                user?.filter_access ? <button className='bg-background flex justify-center border-3 border-border_placeholder p-2 rounded-default shadow-2xl w-photo_form_input' onClick={handleOpenModal}>
                                 <FontAwesomeIcon icon={faFilter} className='h-4 aspect-square text-border_placeholder pt-1'/>
                                 <div className='ml-1'>
                                     Filter
                                 </div>
-                            </button> */}
+                            </button> : <></>
+                            }
+                            <div className={`fixed w-filter mt-6 bg-background p-6 rounded-default border-3 shadow-2xl h-filter flex justify-center content-center ${modalOpen ? 'block' : 'hidden'}`} >
+                                <div className="flex flex-wrap justify-center w-full h-1/2">
+                                    <div className='flex'>
+                                        <label htmlFor="gender" className='font-bold pl-3'>Min Height</label>
+                                        <input type="number" name='min_height' className='w-2/5 my-2 border-3 border-border_placeholder shadow-2xl rounded-default' onChange={(e) => {
+                                          setMinHeight(parseInt(e.target.value.toString()))
+                                        }}/>
+                                        <label htmlFor="gender" className='font-bold pl-3'>Max Height</label>
+                                        <input type="number" name='max_height' className='w-2/5 my-2 border-3 border-border_placeholder shadow-2xl rounded-default' onChange={(e) => {
+                                            setMaxHeight(parseInt(e.target.value.toString()))
+                                        }}/>
+                                    </div>
+                                    <div className='flex mt-6'>
+                                        <label htmlFor="gender" className='font-bold pl-3'>Min Age</label>
+                                        <input type="number" name='min_age' className='w-2/5 my-2 border-3 border-border_placeholder shadow-2xl rounded-default' onChange={(e) => {
+                                            setMinAge(parseInt(e.target.value.toString()))
+                                        }}/>
+                                        <label htmlFor="gender" className='font-bold pl-3'>Max Age</label>
+                                        <input type="number" name='max_age' className='w-2/5 my-2 border-3 border-border_placeholder shadow-2xl rounded-default' onChange={(e) => {
+                                            setMaxAge(parseInt(e.target.value.toString()))
+                                        }}/>
+                                    </div>
+                                    <div className='flex flex-col w-4/5 mt-6'>
+                                        <label htmlFor="gender" className='font-bold pl-3'>Gender</label>
+                                        <select  onChange={(e) => {
+                                            setGender(e.target.value.toString())
+                                        }}  name="gender" id="gender" className='border-3 w-full h-auth_form_input border-border_placeholder bg-background shadow-xl rounded-default px-2 appearance-none'>
+                                            {
+                                                GENDERS.map((gender) => {
+                                                    return(
+                                                        <option key={gender} value={gender}>{gender}</option>
+                                                    )
+                                                })
+                                            }
+                                        </select>
+                                    </div>
+                                    <div className='flex flex-col w-4/5 mt-6'>
+                                        <label htmlFor="religion" className='font-bold pl-3'>Religion</label>
+                                        <select onChange={(e) => {
+                                            setReligion(e.target.value.toString())
+                                        }} name="religion" id="religion" className='border-3 w-full h-auth_form_input border-border_placeholder bg-background shadow-xl rounded-default px-2 appearance-none'>
+                                            {
+                                                RELIGIONS.map((religion) => {
+                                                    return(
+                                                        <option key={religion} value={religion}>{religion}</option>
+                                                    )
+                                                })
+                                            }
+                                        </select>
+                                    </div>
+                                    <div className='flex flex-col w-4/5 mt-6'>
+                                        <label htmlFor="education" className='font-bold pl-3'>Education</label>
+                                        <select onChange={(e) => {
+                                            setEducation(parseInt(e.target.value.toString()))
+                                        }} name="education" id="education" className='border-3 w-full h-auth_form_input border-border_placeholder bg-background shadow-xl rounded-default px-2 appearance-none'>
+                                            {
+                                                EDUCATIONS.map((education) => {
+                                                    return(
+                                                        <option key={education} value={education}>{education}</option>
+                                                    )
+                                                })
+                                            }
+                                        </select>
+                                    </div>
+                                    <div className='flex mt-6 justify-around'>
+                                        <button onClick={updateFilter} className="inline-flex justify-center w-2/5 rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-whitefocus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:text-sm">
+                                            Update
+                                        </button>
+                                        <button onClick={handleCloseModal} className="inline-flex justify-center w-2/5 rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:text-sm">
+                                            Close
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                             <div className='bg-background border-3 border-border_placeholder p-2 rounded-default shadow-2xl w-photo_form_input flex justify-center'>
                                 <FontAwesomeIcon icon={faMagnifyingGlass} className='h-4 aspect-square text-border_placeholder pt-1'/>
                                 <div className='ml-1'>
