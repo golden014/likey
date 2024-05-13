@@ -108,7 +108,7 @@ const LoginPage = () =>{
     return(
         <div className="w-screen h-screen flex flex-row bg-background items-start justify-center">
             <form onSubmit={handleLogin} className='w-1/2 h-full flex flex-col items-center justify-center'>
-                <p className="text-text text-title font-bold">Welcome Back!</p>
+                <p className="text-text text-title font-bold">Welcome</p>
                 <br />
                 {/* <div className='w-4/5 h-auth_form_input'>
                     <input onChange={handleChange} type="email" placeholder='Email' name='email' className='text-text w-full h-full p-6 rounded-default border border-border_placeholder bg-background shadow-xl' ></input>
@@ -119,14 +119,7 @@ const LoginPage = () =>{
                 <div className='w-4/5 h-auth_form_input'>
                     <button className='text-white w-full h-full bg-main rounded-default shadow-xl'>Login using Internet Identity</button>
                 </div>
-                <div className='mt-6 text-text'>
-                    Don{"'"}t have an account?
-                    <a href={"/user/register"} className='ml-1'>
-                        <span className='text-boy'>Join</span> 
-                        <span className='text-girl mx-1'>Likey</span> 
-                        <span className='text-boy'>Now!</span> 
-                    </a>
-                </div>
+                
             </form>
             <img src="/images/merpati.jpg" className="w-1/2 bg-red-500 h-full cover object-cover rounded-l-xl drop-shadow-xl"/>
         </div>

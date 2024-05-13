@@ -127,9 +127,7 @@ const Page = () => {
 
         const data = {
             user : [user1, user2],
-            message : {
-                
-            }
+            message : []
         }
 
         const docRef = await addDoc(colRef, data)
