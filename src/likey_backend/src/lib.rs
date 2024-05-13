@@ -649,7 +649,14 @@ fn feature_payment(id: Vec<u8>, purchase_type: u8) -> Result<User, Error>{
             }
             // Filter Access: 100 likey coin (one time buy)
             else if purchase_type == 2{
-                u.filter_access = true;
+                if u.filter_access == false {
+                    u.likey_coin = u.likey_coin - 100;
+                    u.filter_access = true;
+                }
+                else{
+                    
+                }
+                
             }
             // Add Swipes Allotment: 5 likey coin/swipe
             else if purchase_type == 3{
@@ -730,17 +737,19 @@ fn update_swipe_filter(id: Vec<u8>, filter_attribute: HashMap<String, FilterAttr
 }
 
 #[ic_cdk::update]
-fn add_swipe(user_id: Vec<u8>, swipe_amount: i32) -> Result<Option<User>, Error> {
-
+fn add_swipe(user_id: Vec<u8>, swipe_amount: i32, user_current_swipe:i32) -> Result<Option<User>, Error> {
     //check user's balance
     let coin_enough = permission_helper::coin_sufficient(&user_id, ADD_SWIPE_COST * swipe_amount);
 
-    if coin_enough == false {
+    if coin_enough == false{
         return Err(Error::InvalidPayloadData { msg: "User's balance is not enough".to_string() })
     }
 
     let user = _get_user(&user_id);
 
+    if user_current_swipe > 0 {
+        return Err(Error::InvalidPayloadData { msg: "User's current swipe must be 0".to_string() })
+    }
     match user {
         Some(mut user) => {
             user.current_swipe = user.current_swipe + swipe_amount;

@@ -91,7 +91,7 @@ type UserProfilePayload = record {
 };
 service : {
   add_interest : (AddInterestPayload) -> (Result);
-  add_swipe : (blob, int32) -> (Result_1);
+  add_swipe : (blob, int32, int32) -> (Result_1);
   buy_filter_access : (blob) -> (Result_1);
   create_user : (UserPayload) -> (Result_1);
   feature_payment : (blob, nat8) -> (Result_2);
