@@ -24,13 +24,23 @@ pub(crate) fn generate_swipe(user_id: &Vec<u8>) -> Option<Vec<Vec<u8>>>{
             //get the swipe filters of the user
             let swipe_filters = curr_user.swipe_filters;
 
+            let default_gender_gender = match curr_user.gender == "Male" {
+                true => "Female".to_string(),
+                false => "Male".to_string(),
+            };
+
             //from USER_STORAGE, filter all the user that match the given criteria (from swipe filters)
             let filters_from_user_object: Vec<(Blob<29>, User)> =  USER_STORAGE.with(|s| {
                 s.borrow().iter().filter(|(_id, user)| {
                     swipe_filters.iter().all(|(_key, value)| match value {
 
                         FilterAttribute::Gender{ data } => {
-                            data.is_empty() || user.gender == *data
+                            if data.is_empty() == true {
+                                user.gender == default_gender_gender
+                            } else {
+                                user.gender == *data
+                            }
+                            // user.gender == target_gender || user.gender == *data
                         },
 
                         FilterAttribute::Education { data } => {
