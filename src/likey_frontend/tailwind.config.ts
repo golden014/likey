@@ -35,7 +35,8 @@ const config: Config = {
         picture_screen : "90%",
         interact_button_height : "40px",
         explore_image_height : "125px",
-        chat_profile_image_height : "60px"
+        chat_profile_image_height : "60px",
+        filter : "650px"
       },
       width: {
         photo_form_input : "222px",
@@ -45,6 +46,7 @@ const config: Config = {
         chat_profile_image_width : "60px",
         fit_screen : "85%",
         rest_screen : "10%",
+        filter : "450px"
       },
       borderRadius: {
         default: "25px"

@@ -70,16 +70,16 @@ const Page =  () => {
       setErrorMessage("Add swipe only can while you have 0 swipe left!")
     }
     else{
-      const statusHandleAddSwipe = await likey_backend.add_swipe(
-        Object.values(user.user_id),
-        swipe,
-        user.current_swipe
-      )
+      // const statusHandleAddSwipe = await likey_backend.add_swipe(
+      //   Object.values(user.user_id),
+      //   swipe,
+      //   user.current_swipe
+      // )
   
-      console.log(statusHandleAddSwipe)
-      await getUserDataFromDB(Object.values(user.user_id)).then(()=>{
-        fetchUserData()
-      })
+      // console.log(statusHandleAddSwipe)
+      // await getUserDataFromDB(Object.values(user.user_id)).then(()=>{
+      //   fetchUserData()
+      // })
     }
   }
 

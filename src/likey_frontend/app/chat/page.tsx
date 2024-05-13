@@ -4,16 +4,17 @@ import Navbar from '../component/navbar';
 import Image from 'next/image';
 import { DUMMY_IMAGE } from '../dummy_data';
 import { ChatDateConverter, DateConverter } from '../utility/converter';
-import { Chat } from '../model';
+import { Chat, UserData } from '../model';
 import { database } from '../firebaseConfig';
 import Emptypage from './emptyPage';
 import { arrayUnion, collection, doc, getFirestore, onSnapshot, query, updateDoc, where } from 'firebase/firestore';
+import { getUserData } from '../utility/userDataController';
 
 const ChatPage = () => {
 
     const [chats, setChats] = React.useState<Chat[]>([])
-    const [currentUser, setCurrentUser] = React.useState<number>(3)
-    const [targetUser, setTargetUser] = React.useState<number>(0)
+    const [user, setUser] = React.useState<UserData>()
+    const [targetUser, setTargetUser] = React.useState<string>("")
 
     const defaultBubbleTailwind = "border rounded-default w-fit p-4"
     const [newMessage, setNewMessage] = React.useState<String>()
@@ -27,7 +28,7 @@ const ChatPage = () => {
         await updateDoc(docRef, {
             message : arrayUnion({
                 message : newMessage,
-                sender : currentUser,
+                sender : user?.user_id.join(''),
                 timestamp : new Date()
             })
         })
@@ -38,7 +39,7 @@ const ChatPage = () => {
         user : [],
         message : [{
             message : "",
-            sender : 0,
+            sender : "",
             timestamp : {
                 seconds : 0,
                 nanoseconds : 0
@@ -46,21 +47,17 @@ const ChatPage = () => {
         }]
     })
 
-    const changeCurrentUser = (e : ChangeEvent<HTMLInputElement>) => {
-        setCurrentUser(parseInt(e.target.value))
-        setTargetUser(0)
-    }
-
     const changeTargetUser = (e : Chat) => {
 
         let found = false
 
         chats.map(chat => {
             if (chat === e) {
-                const user = [...chat.user]; 
-                const index = user.indexOf(currentUser);
-                user.splice(index, 1);
-                setTargetUser(user[0])
+                const userData = [...chat.user]; 
+                const find = user?.user_id.join('') || ''
+                const index = userData.indexOf(find);
+                userData.splice(index, 1);
+                setTargetUser(userData[0])
                 found = true
 
                 const fetchData = async() => {
@@ -78,26 +75,46 @@ const ChatPage = () => {
             }
         });
         if(!found){
-            setTargetUser(0)
+            setTargetUser("")
         }
     }
 
 
     React.useEffect(() => {
         const fetchData = async() => {
-            const q = query(collection(database, "chat_room"), where("user", "array-contains", currentUser));
+
+            // let cook = await dec(getCookie("my_principal_id")||"")
+            // console.log(cook)
+
+            // // nembak ID karena tidak bisa akses II punya ID
+            // let afterParse = JSON.parse(cook||"{}")
+            // console.log(afterParse)
+            let afterParse = [1]
+            const userData : any = await getUserData(afterParse)
+            // console.log(userData)
+
+            // const userData:any = await getUserDataFromStorage()
+            console.log("DALAM NAMA TUHAN YESUS")
+            console.log(userData.Ok)
+            
+            setUser(userData.Ok)
+
+            const q = query(collection(database, "chat_room"), where("user", "array-contains", user));
             
            onSnapshot(q, (snapshot) => {
                 const newData: Chat[] = [];
                 snapshot.forEach((doc) => {
                     newData.push({ id: doc.id, ...doc.data() } as Chat);
-                });
+                }); 
+                console.log(newData)
                 setChats(newData)
             });
 
+            
+
         }
         fetchData();
-    }, [currentUser, targetUser]);
+    }, []);
 
     React.useEffect(() => {
         if (scrollableContainerRef.current) {
@@ -113,8 +130,8 @@ const ChatPage = () => {
         <div className='bg-background border-3 border-border_placeholder shadow-2xl h-fit_screen w-page_width rounded-default p-4'>
             <div className='h-full w-full flex'>
                 <div className='w-1/4 h-full overflow-y-auto  p-2'>
-                    <input placeholder='you' className='border' onChange={changeCurrentUser}/>
-                    <input placeholder='target' className='border'/>
+                    {/* <input placeholder='you' className='border' onChange={changeCurrentUser}/>
+                    <input placeholder='target' className='border'/> */}
                     {
                         chats.map((chat_data, idx) => {
                             return(
@@ -140,7 +157,7 @@ const ChatPage = () => {
                 </div>
                 <div className='w-3/4 h-full border-l-3'>
                     {
-                        targetUser == 0 ? 
+                        targetUser == "" ? 
                         <Emptypage/>
                         : 
                         <div className='w-full h-full'>
@@ -161,7 +178,7 @@ const ChatPage = () => {
                                     }
 
                                     let color
-                                    if(bubble.sender != currentUser){
+                                    if(bubble.sender != user?.user_id.join('')){
                                         return(
                                             <div key={index} className='m-2 flex '>
                                                 <div className={`${defaultBubbleTailwind} ${receiveBackgrounColor}`}>

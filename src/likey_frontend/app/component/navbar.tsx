@@ -1,4 +1,4 @@
-import { faComment, faCompass, faDollar, faGear, faHeart, faRightFromBracket, faUser } from '@fortawesome/free-solid-svg-icons'
+import { faClock, faComment, faCompass, faDollar, faGear, faHeart, faRightFromBracket, faUser } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import Link from 'next/link'
 import React from 'react'
@@ -8,6 +8,7 @@ interface Page{
     explore : string,
     chat : string,
     interest : string,
+    history : string
     payment : string,
     setting : string
 }
@@ -19,6 +20,7 @@ const Navbar = ({pageName} : {pageName : string}) => {
         explore : pageName == "Explore" ? "bg-main" : "bg-background",
         chat : pageName == "Chat" ? "bg-main" : "bg-background",
         interest : pageName == "Interest" ? "bg-main" : "bg-background",
+        history : pageName == "History" ? "bg-main" : "bg-background",
         payment : pageName == "Purchase" ? "bg-main" : "bg-background",
         setting : pageName == "Setting" ? "bg-main" : "bg-background",
     }
@@ -41,8 +43,8 @@ const Navbar = ({pageName} : {pageName : string}) => {
                 <Link href={"/interested"} className={`${defaultTailwind} ${color.interest}`}>
                     <FontAwesomeIcon icon={faHeart} className='w-3/5 h-3/5' color='white'/>
                 </Link>
-                <Link href={"/history"} className={`${defaultTailwind} ${color.interest}`}>
-                    <FontAwesomeIcon icon={faHeart} className='w-3/5 h-3/5' color='white'/>
+                <Link href={"/history"} className={`${defaultTailwind} ${color.history}`}>
+                    <FontAwesomeIcon icon={faClock} className='w-3/5 h-3/5' color='white'/>
                 </Link>
                 
             </div>
