@@ -41,6 +41,10 @@ const Navbar = ({pageName} : {pageName : string}) => {
                 <Link href={"/interested"} className={`${defaultTailwind} ${color.interest}`}>
                     <FontAwesomeIcon icon={faHeart} className='w-3/5 h-3/5' color='white'/>
                 </Link>
+                <Link href={"/history"} className={`${defaultTailwind} ${color.interest}`}>
+                    <FontAwesomeIcon icon={faHeart} className='w-3/5 h-3/5' color='white'/>
+                </Link>
+                
             </div>
             {/* Bot Part */}
             <div className='w-full flex items-center justify-center p-6 flex-col gap-4'>
