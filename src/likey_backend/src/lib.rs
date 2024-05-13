@@ -476,7 +476,8 @@ fn get_all_interest_and_users_by_user_id(user_id: Vec<u8>) -> (Vec<Interest>, Ve
 
     INTEREST_STORAGE.with(|s| {
         for i in s.borrow().iter() {
-            if (i.user_id_source == user_id) && (i.is_interested == true) {
+            //get all the user that interested with current user
+            if (i.user_id_destination == user_id) && (i.is_interested == true) {
                 match _get_user(&i.user_id_destination){
                     Some(user) => {
                         output_user.push(user);
