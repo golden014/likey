@@ -131,3 +131,9 @@ export interface UserHobby {
     name : string,
     user_id : number[]
 }
+
+export interface InterestRespond{
+    user_id_src : number[] | Uint8Array,
+    user_id_dest : number[] | Uint8Array,
+    is_interested : boolean
+}

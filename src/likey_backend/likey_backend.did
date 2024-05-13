@@ -96,6 +96,10 @@ service : {
   create_user : (UserPayload) -> (Result_1);
   feature_payment : (blob, nat8) -> (Result_2);
   get_all_hobby_by_user_id : (blob) -> (vec Hobby) query;
+  get_all_interest_and_users_by_user_id : (blob) -> (
+      vec Interest,
+      vec User,
+    ) query;
   get_feeds : (blob) -> (Result_3);
   get_interested_history : (blob) -> (vec User) query;
   get_last_swipe_index_by_user_id : (blob) -> (Result_4) query;

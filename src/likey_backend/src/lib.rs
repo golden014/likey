@@ -76,6 +76,13 @@ struct Interest {
     is_revealed: bool
 }
 
+// #[derive(candid::CandidType, Clone, Serialize, Deserialize, Default, PartialEq, Eq)]
+// struct InterestByUserReturn {
+//     user_destination: User,
+//     is_interested: bool,
+//     is_revealed: bool
+// }
+
 impl Storable for User {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
         Cow::Owned(Encode!(self).unwrap())
@@ -461,6 +468,30 @@ fn _get_all_interest_by_user_id(user_id: &Vec<u8>) -> Vec<Interest> {
     });
     output
 }
+
+#[ic_cdk::query]
+fn get_all_interest_and_users_by_user_id(user_id: Vec<u8>) -> (Vec<Interest>, Vec<User>) {
+    let mut output_interest: Vec<Interest> = Vec::new();
+    let mut output_user: Vec<User> = Vec::new();
+
+    INTEREST_STORAGE.with(|s| {
+        for i in s.borrow().iter() {
+            //get all the user that interested with current user
+            if (i.user_id_destination == user_id) && (i.is_interested == true) {
+                match _get_user(&i.user_id_destination){
+                    Some(user) => {
+                        output_user.push(user);
+                        output_interest.push(i)
+                    },
+                    None => {},
+                }  
+                
+            }
+        }
+    });
+    (output_interest, output_user)
+}
+
 
 //get all user that the specifed user interested in
 #[ic_cdk::query]

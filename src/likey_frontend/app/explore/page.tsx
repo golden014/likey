@@ -9,8 +9,10 @@ import { getUserData, getUserDataFromStorage } from '../utility/userDataControll
 import { dec } from '../utility/cryptController';
 import { getCookie } from 'cookies-next';
 import { addInterest, getFeeds, getHobby } from '../utility/feedController';
-import { FeedProfile, UserData, UserHobby } from '../model';
+import { FeedProfile, InterestRespond, UserData, UserHobby } from '../model';
 import Loading from '../utility/loading';
+import { database } from '../firebaseConfig';
+import { addDoc } from 'firebase/firestore';
 
 const Page = () => {
     
@@ -19,7 +21,7 @@ const Page = () => {
     const [hobbies, setHobby] = React.useState<UserHobby[]>()
 
     const generateFeed = async() => {
-        const id = user?.user_id || [1]
+        const id = user?.user_id || [4]
         console.log(id)
         const data : any = await getFeeds(id)
         console.log(data)
@@ -41,29 +43,43 @@ const Page = () => {
             // // nembak ID karena tidak bisa akses II punya ID
             // let afterParse = JSON.parse(cook||"{}")
             // console.log(afterParse)
-            // // let afterParse = [1]
-            // const userData : any = await getUserData(afterParse)
+            let afterParse = [4]
+            const userData : any = await getUserData(afterParse)
             // console.log(userData)
 
-            const userData:any = await getUserDataFromStorage()
+            // const userData:any = await getUserDataFromStorage()
+            console.log("DALAM NAMA TUHAN YESUS")
             console.log(userData)
             
-            setUser(userData)
+            setUser(userData.Ok)
+            generateFeed()
         }
 
         fetchUserData()
-        generateFeed()
 
     }, [])
 
-    
+    const createChatInFirebase = async() => {
+
+        
+
+    }
 
     const handleInterest = async(isInterest : boolean) => {
+        console.log(user, feed)
         const srcUser = user?.user_id || [1]
         const dstUser = feed?.user_id || [2]
         setFeed(null)
-        const result = await addInterest(srcUser, dstUser, isInterest)
+        console.log(Array.from(srcUser), Array.from(dstUser), isInterest);
+        
+        const result : any = await addInterest(Array.from(srcUser), Array.from(dstUser), isInterest)
+        console.log("aaaa")
         console.log(result)
+
+        if(result.is_interested == true){
+
+        }
+
         generateFeed()
     }
 
