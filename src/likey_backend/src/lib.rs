@@ -5,7 +5,7 @@ use candid::{Decode, Encode};
 use ic_cdk::api::time;
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
 use ic_stable_structures::storable::Blob;
-use ic_stable_structures::{BoundedStorable, DefaultMemoryImpl, StableBTreeMap, Storable, StableVec};
+use ic_stable_structures::{vec, BoundedStorable, DefaultMemoryImpl, StableBTreeMap, StableVec, Storable};
 use permission_helper::coin_sufficient;
 use std::collections::HashMap;
 
@@ -339,7 +339,6 @@ fn update_reveal(data: UpdateIsRevealedPayload) -> Result<Option<Interest>, Erro
     //cari dlu object interest nya, ambil positionnya (index nya), trus set value di idx tsb sama object user yg baru yg udah keupdate
     let interest = interest_exist(&data.user_id_source, &data.user_id_destination);
 
-    //TODO: update user's coin -> code nya rapiin jadi kaya yg di rollback aja ntar
     match interest {
         //if it exists, get the index and set the new value of that index with new interest object
         Some(interest) => {
@@ -478,7 +477,7 @@ fn get_all_interest_and_users_by_user_id(user_id: Vec<u8>) -> (Vec<Interest>, Ve
         for i in s.borrow().iter() {
             //get all the user that interested with current user
             if (i.user_id_destination == user_id) && (i.is_interested == true) {
-                match _get_user(&i.user_id_destination){
+                match _get_user(&i.user_id_source){
                     Some(user) => {
                         output_user.push(user);
                         output_interest.push(i)
@@ -565,7 +564,7 @@ fn create_user(data: UserPayload) -> Result<Option<User>, Error> {
                 photo_link: data.photo_link,
                 likey_coin: 0,
                 current_swipe: data.current_swipe,
-                filter_access: data.filter_access,
+                filter_access: false,
                 swipe_filters: data.swipe_filters,
                 dob: data.dob,
                 last_swipe_index: 0
@@ -577,6 +576,7 @@ fn create_user(data: UserPayload) -> Result<Option<User>, Error> {
         },
     }
 }
+
 
 fn do_insert_user(data: &User) {
     let p = Blob::from_bytes(std::borrow::Cow::Borrowed(&data.user_id));
@@ -665,50 +665,6 @@ fn update_coin(id: Vec<u8>, data: UpdateUserCoinPayload)->Result<User, Error>{
     }
 }
 
-#[ic_cdk::update]
-// Reveal Profile Who Interest with You: 10 likey coin/person
-// Filter Access: 100 likey coin (one time buy)
-// Add Swipes Allotment: 5 likey coin/swipe
-// Rollback/Reswipe(Reswipe person who had left swiped): 10 likey coin/person
-fn feature_payment(id: Vec<u8>, purchase_type: u8) -> Result<User, Error>{
-    let user = _get_user(&id);
-    match user{
-        Some(mut u) => {
-            // Reveal Profile Who Interest with You: 10 likey coin/person
-            if purchase_type == 1{
-
-            }
-            // Filter Access: 100 likey coin (one time buy)
-            else if purchase_type == 2{
-                if u.filter_access == false {
-                    u.likey_coin = u.likey_coin - 100;
-                    u.filter_access = true;
-                }
-                else{
-                    
-                }
-                
-            }
-            // Add Swipes Allotment: 5 likey coin/swipe
-            else if purchase_type == 3{
-
-            }
-            // Rollback/Reswipe(Reswipe person who had left swiped): 10 likey coin/person
-            else if purchase_type == 4{
-                
-            }
-            do_insert_user(&u);
-            Ok(u)
-        },
-        None => Err(Error::NotFound {
-            msg: format!(
-                "couldn't update user with id={:?}. user not found",
-                id
-            ),
-        }),
-    }
-        
-}
 
 #[ic_cdk::update]
 fn get_feeds(id: Vec<u8>) -> Result<Option<Vec<User>>, Error> {
@@ -944,47 +900,229 @@ fn check_is_match(user_id_source: &Vec<u8>, user_id_source_interest: &bool, user
     })
 }
 
-#[ic_cdk::query]
-fn generate_dummy() {
 
-    let mut filter_map: HashMap<String, FilterAttribute> = HashMap::new();
+// fn create_user_dummy_helper(data: UserPayload) -> Result<Option<User>, Error> {
+//     //check if user with the same principal id already exist
+//     match _get_user(&data.user_principal_id) {
+//         Some(_) => {
+//             return Err(Error::InvalidPayloadData { msg: "User already exists".to_string() })
+//         },
+//         None => {
+//             let new_user = User {
+//                 user_id: data.user_principal_id,
+//                 first_name: data.first_name,
+//                 last_name: data.last_name,
+//                 height: data.height,
+//                 gender: data.gender,
+//                 education: data.education,
+//                 religion: data.religion,
+//                 description: data.description,
+//                 profile_picture_link: data.profile_picture_link,
+//                 photo_link: data.photo_link,
+//                 likey_coin: 0,
+//                 current_swipe: data.current_swipe,
+//                 filter_access: data.filter_access,
+//                 swipe_filters: data.swipe_filters,
+//                 dob: data.dob,
+//                 last_swipe_index: 0
+//             };
+        
+//             //insert new User
+//             do_insert_user(&new_user);
+//             Ok(Some(new_user))
+//         },
+//     }
+// }
 
-    // Inserting values into the HashMap
-    filter_map.insert("Gender".to_string(), FilterAttribute::Gender { data: "".to_string() });
-    filter_map.insert("Education".to_string(), FilterAttribute::Education { data: 0 });
-    filter_map.insert("Religion".to_string(), FilterAttribute::Religion { data: "".to_string() });
-    filter_map.insert("Height".to_string(), FilterAttribute::Height { data_start: 0, data_end: 0 });
-    filter_map.insert("Age".to_string(), FilterAttribute::Age { data_start: 0, data_end: 0 });
+#[ic_cdk::update]
+fn create_user_dummy(data: UserPayload) -> Result<Option<User>, Error> {
+    //check if user with the same principal id already exist
+    match _get_user(&data.user_principal_id) {
+        Some(_) => {
+            return Err(Error::InvalidPayloadData { msg: "User already exists".to_string() })
+        },
+        None => {
 
-    let mut filter_map1: HashMap<String, FilterAttribute> = HashMap::new();
+            let mut filter_map: HashMap<String, FilterAttribute> = HashMap::new();
 
-    filter_map1.insert("Gender".to_string(), FilterAttribute::Gender { data: "Female".to_string() });
-    filter_map1.insert("Education".to_string(), FilterAttribute::Education { data: 0 });
-    filter_map1.insert("Religion".to_string(), FilterAttribute::Religion { data: "".to_string() });
-    filter_map1.insert("Height".to_string(), FilterAttribute::Height { data_start: 0, data_end: 0 });
-    filter_map1.insert("Age".to_string(), FilterAttribute::Age { data_start: 20, data_end: 24 });
+            // Inserting values into the HashMap
+            filter_map.insert("Gender".to_string(), FilterAttribute::Gender { data: "".to_string() });
+            filter_map.insert("Education".to_string(), FilterAttribute::Education { data: 0 });
+            filter_map.insert("Religion".to_string(), FilterAttribute::Religion { data: "".to_string() });
+            filter_map.insert("Height".to_string(), FilterAttribute::Height { data_start: 0, data_end: 0 });
+            filter_map.insert("Age".to_string(), FilterAttribute::Age { data_start: 0, data_end: 0 });
 
-    let new_user1 = User { user_id: vec![1u8], first_name: "First".to_string(), last_name: "User".to_string(), height: 170, gender: "Male".to_string(), education: 2, religion: "Christian".to_string(), description: "this is description".to_string(), profile_picture_link: "https://picsum.photos/200/200".to_string(), photo_link: vec!["https://picsum.photos/200/200".to_string()], likey_coin: 50, current_swipe: 30, filter_access: true, swipe_filters: filter_map.clone(), dob: "1995-09-14".to_string(), last_swipe_index: 0};
-    let new_user2 = User { user_id: vec![2u8], first_name: "Second".to_string(), last_name: "User".to_string(), height: 170, gender: "Male".to_string(), education: 2, religion: "Muslim".to_string(), description: "this is description".to_string(), profile_picture_link: "https://picsum.photos/200/200".to_string(), photo_link: vec!["https://picsum.photos/200/200".to_string()], likey_coin: 50, current_swipe: 30, filter_access: true, swipe_filters: filter_map.clone(), dob: "1996-09-14".to_string(), last_swipe_index: 0};
-    let new_user3 = User { user_id: vec![3u8], first_name: "Third".to_string(), last_name: "User".to_string(), height: 170, gender: "Male".to_string(), education: 2, religion: "Christian".to_string(), description: "this is description".to_string(), profile_picture_link: "https://picsum.photos/200/200".to_string(), photo_link: vec!["https://picsum.photos/200/200".to_string()], likey_coin: 50, current_swipe: 30, filter_access: true, swipe_filters: filter_map1.clone(), dob: "1997-09-14".to_string(), last_swipe_index: 0};
-    let new_user4 = User { user_id: vec![4u8], first_name: "Fourth".to_string(), last_name: "User".to_string(), height: 170, gender: "Male".to_string(), education: 2, religion: "Muslim".to_string(), description: "this is description".to_string(), profile_picture_link: "https://picsum.photos/200/200".to_string(), photo_link: vec!["https://picsum.photos/200/200".to_string()], likey_coin: 50, current_swipe: 30, filter_access: true, swipe_filters: filter_map.clone(), dob: "1998-09-14".to_string(), last_swipe_index: 0};
-    let new_user5 = User { user_id: vec![5u8], first_name: "Fifth".to_string(), last_name: "User".to_string(), height: 170, gender: "Male".to_string(), education: 2, religion: "Christian".to_string(), description: "this is description".to_string(), profile_picture_link: "https://picsum.photos/200/200".to_string(), photo_link: vec!["https://picsum.photos/200/200".to_string()], likey_coin: 50, current_swipe: 30, filter_access: true, swipe_filters: filter_map.clone(), dob: "1999-09-14".to_string(), last_swipe_index: 0};
-    let new_user6 = User { user_id: vec![6u8], first_name: "Sixth".to_string(), last_name: "User".to_string(), height: 170, gender: "Female".to_string(), education: 2, religion: "Muslim".to_string(), description: "this is description".to_string(), profile_picture_link: "https://picsum.photos/200/200".to_string(), photo_link: vec!["https://picsum.photos/200/200".to_string()], likey_coin: 50, current_swipe: 30, filter_access: true, swipe_filters: filter_map1.clone(), dob: "2000-09-14".to_string(), last_swipe_index: 0};
-    let new_user7 = User { user_id: vec![7u8], first_name: "Seventh".to_string(), last_name: "User".to_string(), height: 170, gender: "Female".to_string(), education: 2, religion: "Christian".to_string(), description: "this is description".to_string(), profile_picture_link: "https://picsum.photos/200/200".to_string(), photo_link: vec!["https://picsum.photos/200/200".to_string()], likey_coin: 50, current_swipe: 30, filter_access: true, swipe_filters: filter_map.clone(), dob: "2001-09-14".to_string(), last_swipe_index: 0};
-    let new_user8 = User { user_id: vec![8u8], first_name: "Eighth".to_string(), last_name: "User".to_string(), height: 170, gender: "Female".to_string(), education: 2, religion: "Muslim".to_string(), description: "this is description".to_string(), profile_picture_link: "https://picsum.photos/200/200".to_string(), photo_link: vec!["https://picsum.photos/200/200".to_string()], likey_coin: 50, current_swipe: 30, filter_access: true, swipe_filters: filter_map.clone(), dob: "2002-09-14".to_string(), last_swipe_index: 0};
-    let new_user9 = User { user_id: vec![9u8], first_name: "Nineth".to_string(), last_name: "User".to_string(), height: 170, gender: "Female".to_string(), education: 2, religion: "Christian".to_string(), description: "this is description".to_string(), profile_picture_link: "https://picsum.photos/200/200".to_string(), photo_link: vec!["https://picsum.photos/200/200".to_string()], likey_coin: 50, current_swipe: 30, filter_access: true, swipe_filters: filter_map1.clone(), dob: "2003-09-14".to_string(), last_swipe_index: 0};
-    let new_user10 = User { user_id: vec![10u8], first_name: "Tenth".to_string(), last_name: "User".to_string(), height: 170, gender: "Female".to_string(), education: 2, religion: "Muslim".to_string(), description: "this is description".to_string(), profile_picture_link: "https://picsum.photos/200/200".to_string(), photo_link: vec!["https://picsum.photos/200/200".to_string()], likey_coin: 50, current_swipe: 30, filter_access: true, swipe_filters: filter_map.clone(), dob: "2004-09-14".to_string(), last_swipe_index: 0};
+            let mut filter_map1: HashMap<String, FilterAttribute> = HashMap::new();
 
-    do_insert_user(&new_user1);
-    do_insert_user(&new_user2);
-    do_insert_user(&new_user3);
-    do_insert_user(&new_user4);
-    do_insert_user(&new_user5);
-    do_insert_user(&new_user6);
-    do_insert_user(&new_user7);
-    do_insert_user(&new_user8);
-    do_insert_user(&new_user9);
-    do_insert_user(&new_user10);
+            filter_map1.insert("Gender".to_string(), FilterAttribute::Gender { data: "Female".to_string() });
+            filter_map1.insert("Education".to_string(), FilterAttribute::Education { data: 0 });
+            filter_map1.insert("Religion".to_string(), FilterAttribute::Religion { data: "".to_string() });
+            filter_map1.insert("Height".to_string(), FilterAttribute::Height { data_start: 0, data_end: 0 });
+            filter_map1.insert("Age".to_string(), FilterAttribute::Age { data_start: 20, data_end: 24 });
+            
+            let new_user = User {
+                user_id: vec![1],
+                first_name: "Josua".to_string(),
+                last_name: data.last_name.clone(),
+                height: data.height.clone(),
+                gender: data.gender.clone(),
+                education: data.education.clone(),
+                religion: data.religion.clone(),
+                description: data.description.clone(),
+                profile_picture_link: data.profile_picture_link.clone(),
+                photo_link: data.photo_link.clone(),
+                likey_coin: 0,
+                current_swipe: data.current_swipe.clone(),
+                filter_access: data.filter_access.clone(),
+                swipe_filters: filter_map1.clone(),
+                dob: data.dob.clone(),
+                last_swipe_index: 0
+            };
+
+            let new_user2 = User {
+                user_id: vec![2],
+                first_name: "Josua2".to_string(),
+                last_name: data.last_name.clone(),
+                height: data.height.clone(),
+                gender: data.gender.clone(),
+                education: data.education.clone(),
+                religion: data.religion.clone(),
+                description: data.description.clone(),
+                profile_picture_link: data.profile_picture_link.clone(),
+                photo_link: data.photo_link.clone(),
+                likey_coin: 0,
+                current_swipe: data.current_swipe.clone(),
+                filter_access: data.filter_access.clone(),
+                swipe_filters: filter_map.clone(),
+                dob: data.dob.clone(),
+                last_swipe_index: 0
+            };
+
+            let new_user3 = User {
+                user_id: vec![3],
+                first_name: "Josua3Female".to_string(),
+                last_name: data.last_name.clone(),
+                height: data.height.clone(),
+                gender: "Female".to_string(),
+                education: data.education.clone(),
+                religion: data.religion.clone(),
+                description: data.description.clone(),
+                profile_picture_link: data.profile_picture_link.clone(),
+                photo_link: data.photo_link.clone(),
+                likey_coin: 0,
+                current_swipe: data.current_swipe.clone(),
+                filter_access: data.filter_access.clone(),
+                swipe_filters: filter_map1,
+                dob: data.dob.clone(),
+                last_swipe_index: 0
+            };
+
+            let new_user4 = User {
+                user_id: vec![4],
+                first_name: "Josua4Femle".to_string(),
+                last_name: data.last_name.clone(),
+                height: data.height.clone(),
+                gender: "Female".to_string(),
+                education: data.education.clone(),
+                religion: data.religion.clone(),
+                description: data.description.clone(),
+                profile_picture_link: data.profile_picture_link.clone(),
+                photo_link: data.photo_link.clone(),
+                likey_coin: 0,
+                current_swipe: data.current_swipe.clone(),
+                filter_access: data.filter_access.clone(),
+                swipe_filters: filter_map,
+                dob: data.dob.clone(),
+                last_swipe_index: 0
+            };
+        
+            //insert new User
+            do_insert_user(&new_user);
+            do_insert_user(&new_user2);
+            do_insert_user(&new_user3);
+            do_insert_user(&new_user4);
+
+            Ok(Some(new_user))
+        },
+    }
 }
+
+// #[ic_cdk::query]
+// fn generate_dummy() -> Result<Option<User>, Error> {
+
+//     let mut filter_map: HashMap<String, FilterAttribute> = HashMap::new();
+
+//     // Inserting values into the HashMap
+//     filter_map.insert("Gender".to_string(), FilterAttribute::Gender { data: "".to_string() });
+//     filter_map.insert("Education".to_string(), FilterAttribute::Education { data: 0 });
+//     filter_map.insert("Religion".to_string(), FilterAttribute::Religion { data: "".to_string() });
+//     filter_map.insert("Height".to_string(), FilterAttribute::Height { data_start: 0, data_end: 0 });
+//     filter_map.insert("Age".to_string(), FilterAttribute::Age { data_start: 0, data_end: 0 });
+
+//     let user_principal_id1: Vec<u8> = vec![71];
+
+//     // let mut filter_map1: HashMap<String, FilterAttribute> = HashMap::new();
+
+//     // filter_map1.insert("Gender".to_string(), FilterAttribute::Gender { data: "Female".to_string() });
+//     // filter_map1.insert("Education".to_string(), FilterAttribute::Education { data: 0 });
+//     // filter_map1.insert("Religion".to_string(), FilterAttribute::Religion { data: "".to_string() });
+//     // filter_map1.insert("Height".to_string(), FilterAttribute::Height { data_start: 0, data_end: 0 });
+//     // filter_map1.insert("Age".to_string(), FilterAttribute::Age { data_start: 20, data_end: 24 });
+
+//     // let new_user1 = User { user_id: vec![1u8], first_name: "First".to_string(), last_name: "User".to_string(), height: 170, gender: "Male".to_string(), education: 2, religion: "Christian".to_string(), description: "this is description".to_string(), profile_picture_link: "https://picsum.photos/200/200".to_string(), photo_link: vec!["https://picsum.photos/200/200".to_string()], likey_coin: 50, current_swipe: 30, filter_access: true, swipe_filters: filter_map.clone(), dob: "1995-09-14".to_string(), last_swipe_index: 0};
+//     // let new_user2 = User { user_id: vec![2u8], first_name: "Second".to_string(), last_name: "User".to_string(), height: 170, gender: "Male".to_string(), education: 2, religion: "Muslim".to_string(), description: "this is description".to_string(), profile_picture_link: "https://picsum.photos/200/200".to_string(), photo_link: vec!["https://picsum.photos/200/200".to_string()], likey_coin: 50, current_swipe: 30, filter_access: true, swipe_filters: filter_map.clone(), dob: "1996-09-14".to_string(), last_swipe_index: 0};
+//     // let new_user3 = User { user_id: vec![3u8], first_name: "Third".to_string(), last_name: "User".to_string(), height: 170, gender: "Male".to_string(), education: 2, religion: "Christian".to_string(), description: "this is description".to_string(), profile_picture_link: "https://picsum.photos/200/200".to_string(), photo_link: vec!["https://picsum.photos/200/200".to_string()], likey_coin: 50, current_swipe: 30, filter_access: true, swipe_filters: filter_map1.clone(), dob: "1997-09-14".to_string(), last_swipe_index: 0};
+//     // let new_user4 = User { user_id: vec![4u8], first_name: "Fourth".to_string(), last_name: "User".to_string(), height: 170, gender: "Male".to_string(), education: 2, religion: "Muslim".to_string(), description: "this is description".to_string(), profile_picture_link: "https://picsum.photos/200/200".to_string(), photo_link: vec!["https://picsum.photos/200/200".to_string()], likey_coin: 50, current_swipe: 30, filter_access: true, swipe_filters: filter_map.clone(), dob: "1998-09-14".to_string(), last_swipe_index: 0};
+//     // let new_user5 = User { user_id: vec![5u8], first_name: "Fifth".to_string(), last_name: "User".to_string(), height: 170, gender: "Male".to_string(), education: 2, religion: "Christian".to_string(), description: "this is description".to_string(), profile_picture_link: "https://picsum.photos/200/200".to_string(), photo_link: vec!["https://picsum.photos/200/200".to_string()], likey_coin: 50, current_swipe: 30, filter_access: true, swipe_filters: filter_map.clone(), dob: "1999-09-14".to_string(), last_swipe_index: 0};
+//     // let new_user6 = User { user_id: vec![6u8], first_name: "Sixth".to_string(), last_name: "User".to_string(), height: 170, gender: "Female".to_string(), education: 2, religion: "Muslim".to_string(), description: "this is description".to_string(), profile_picture_link: "https://picsum.photos/200/200".to_string(), photo_link: vec!["https://picsum.photos/200/200".to_string()], likey_coin: 50, current_swipe: 30, filter_access: true, swipe_filters: filter_map1.clone(), dob: "2000-09-14".to_string(), last_swipe_index: 0};
+//     // let new_user7 = User { user_id: vec![7u8], first_name: "Seventh".to_string(), last_name: "User".to_string(), height: 170, gender: "Female".to_string(), education: 2, religion: "Christian".to_string(), description: "this is description".to_string(), profile_picture_link: "https://picsum.photos/200/200".to_string(), photo_link: vec!["https://picsum.photos/200/200".to_string()], likey_coin: 50, current_swipe: 30, filter_access: true, swipe_filters: filter_map.clone(), dob: "2001-09-14".to_string(), last_swipe_index: 0};
+//     // let new_user8 = User { user_id: vec![8u8], first_name: "Eighth".to_string(), last_name: "User".to_string(), height: 170, gender: "Female".to_string(), education: 2, religion: "Muslim".to_string(), description: "this is description".to_string(), profile_picture_link: "https://picsum.photos/200/200".to_string(), photo_link: vec!["https://picsum.photos/200/200".to_string()], likey_coin: 50, current_swipe: 30, filter_access: true, swipe_filters: filter_map.clone(), dob: "2002-09-14".to_string(), last_swipe_index: 0};
+//     // let new_user9 = User { user_id: vec![9u8], first_name: "Nineth".to_string(), last_name: "User".to_string(), height: 170, gender: "Female".to_string(), education: 2, religion: "Christian".to_string(), description: "this is description".to_string(), profile_picture_link: "https://picsum.photos/200/200".to_string(), photo_link: vec!["https://picsum.photos/200/200".to_string()], likey_coin: 50, current_swipe: 30, filter_access: true, swipe_filters: filter_map1.clone(), dob: "2003-09-14".to_string(), last_swipe_index: 0};
+//     // let new_user10 = User { user_id: vec![10u8], first_name: "Tenth".to_string(), last_name: "User".to_string(), height: 170, gender: "Female".to_string(), education: 2, religion: "Muslim".to_string(), description: "this is description".to_string(), profile_picture_link: "https://picsum.photos/200/200".to_string(), photo_link: vec!["https://picsum.photos/200/200".to_string()], likey_coin: 50, current_swipe: 30, filter_access: true, swipe_filters: filter_map.clone(), dob: "2004-09-14".to_string(), last_swipe_index: 0};
+
+//     let data: UserPayload = UserPayload {user_principal_id: user_principal_id1, first_name: "First".to_string(), last_name: "User".to_string(), height: 170, gender: "Male".to_string(), education: 2, religion: "Christian".to_string(), description: "asdasd".to_string(), profile_picture_link: "https://picsum.photos/200/200".to_string(), photo_link: vec![], likey_coin: 0 as i32, current_swipe: 0 as i32, filter_access: false, swipe_filters: filter_map, dob: "1995-09-14".to_string()};
+
+//     // create_user_dummy_helper(data)
+//     let new_user = User {
+//         user_id: data.user_principal_id,
+//         first_name: data.first_name,
+//         last_name: data.last_name,
+//         height: data.height,
+//         gender: data.gender,
+//         education: data.education,
+//         religion: data.religion,
+//         description: data.description,
+//         profile_picture_link: data.profile_picture_link,
+//         photo_link: data.photo_link,
+//         likey_coin: 0,
+//         current_swipe: data.current_swipe,
+//         filter_access: data.filter_access,
+//         swipe_filters: data.swipe_filters,
+//         dob: data.dob,
+//         last_swipe_index: 0
+//     };
+
+//     //insert new User
+//     do_insert_user(&new_user);
+//     Ok(Some(new_user))
+
+//     // do_insert_user(&new_user1);
+//     // Ok(new_user1)
+//     // let p = Blob::from_bytes(std::borrow::Cow::Borrowed(&new_user1.user_id));
+//     // match USER_STORAGE.with(|service| service.borrow_mut().insert(p, new_user1.clone())) {
+//     //     Some(user) => return Ok(user),
+//     //     None => return Err(Error::NotFound { msg: "error".to_string() }),
+//     // }
+    
+//     // do_insert_user(&new_user2);
+//     // do_insert_user(&new_user3);
+//     // do_insert_user(&new_user4);
+//     // do_insert_user(&new_user5);
+//     // do_insert_user(&new_user6);
+//     // do_insert_user(&new_user7);
+//     // do_insert_user(&new_user8);
+//     // do_insert_user(&new_user9);
+//     // do_insert_user(&new_user10);
+// }
 
 ic_cdk::export_candid!();

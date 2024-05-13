@@ -94,6 +94,7 @@ service : {
   add_swipe : (blob, int32, int32) -> (Result_1);
   buy_filter_access : (blob) -> (Result_1);
   create_user : (UserPayload) -> (Result_1);
+  create_user_dummyyy : (UserPayload) -> (Result_1);
   feature_payment : (blob, nat8) -> (Result_2);
   get_all_hobby_by_user_id : (blob) -> (vec Hobby) query;
   get_all_interest_and_users_by_user_id : (blob) -> (
