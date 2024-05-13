@@ -330,7 +330,7 @@ fn update_interest(data: UpdateIsInterestedPayload) -> Result<Option<Interest>, 
 #[ic_cdk::update]
 fn update_reveal(data: UpdateIsRevealedPayload) -> Result<Option<Interest>, Error> {
 
-    let coin_enough = permission_helper::coin_sufficient(&data.user_id_source, REVEAL_COST);
+    let coin_enough = permission_helper::coin_sufficient(&data.user_id_destination, REVEAL_COST);
 
     if coin_enough == false {
         return Err(Error::InvalidPayloadData { msg: "User don't have enough coin".to_string() });

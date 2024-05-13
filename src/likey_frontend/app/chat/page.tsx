@@ -8,7 +8,7 @@ import { Chat, UserData } from '../model';
 import { database } from '../firebaseConfig';
 import Emptypage from './emptyPage';
 import { arrayUnion, collection, doc, getFirestore, onSnapshot, query, updateDoc, where } from 'firebase/firestore';
-import { getUserData } from '../utility/userDataController';
+import { getUserData, getUserDataFromStorage } from '../utility/userDataController';
 
 const ChatPage = () => {
 
@@ -25,10 +25,19 @@ const ChatPage = () => {
     const sendMessage = async() => {
         console.log(showChat)
         const docRef = doc(database, 'chat_room', showChat.id)
+
+        
+        const userData:any = await getUserDataFromStorage()
+        console.log("DALAM NAMA TUHAN YESUS")
+        
+
+        const id = userData.user_id
+        console.log(id)
+
         await updateDoc(docRef, {
             message : arrayUnion({
                 message : newMessage,
-                sender : user?.user_id.join(''),
+                sender : Object.values(id).join(''),
                 timestamp : new Date()
             })
         })
@@ -47,14 +56,30 @@ const ChatPage = () => {
         }]
     })
 
-    const changeTargetUser = (e : Chat) => {
+    const changeTargetUser = async(e : Chat) => {
 
         let found = false
 
+        
+        const userData:any = await getUserDataFromStorage()
+        console.log("DALAM NAMA TUHAN YESUS")
+        
+
+        const id = userData.user_id
+        
+
         chats.map(chat => {
             if (chat === e) {
+                
                 const userData = [...chat.user]; 
-                const find = user?.user_id.join('') || ''
+                
+                console.log("User Data : ", userData)
+
+                const tempId = Object.values(id).toString()
+                console.log(tempId)
+                console.log("aaaa")
+
+                const find = tempId || ''
                 const index = userData.indexOf(find);
                 userData.splice(index, 1);
                 setTargetUser(userData[0])
@@ -68,7 +93,7 @@ const ChatPage = () => {
                     const unsub = onSnapshot(docRef, (doc) => {  
                         setShowChat({id : doc.id, ...doc.data()} as Chat)
                     })
-                    
+                    console.log("dapet fetch data chat")
                 }
                 fetchData()
 
@@ -89,17 +114,20 @@ const ChatPage = () => {
             // // nembak ID karena tidak bisa akses II punya ID
             // let afterParse = JSON.parse(cook||"{}")
             // console.log(afterParse)
-            let afterParse = [1]
-            const userData : any = await getUserData(afterParse)
+            // let afterParse = [1]
+            // const userData : any = await getUserData(afterParse)
             // console.log(userData)
 
-            // const userData:any = await getUserDataFromStorage()
+            const userData:any = await getUserDataFromStorage()
             console.log("DALAM NAMA TUHAN YESUS")
-            console.log(userData.Ok)
+            console.log(userData)
             
-            setUser(userData.Ok)
+            setUser(userData)
 
-            const q = query(collection(database, "chat_room"), where("user", "array-contains", user));
+            const tempId =  Object.values(userData.user_id).join('')
+            console.log(tempId)
+
+            const q = query(collection(database, "chat_room"), where("user", "array-contains", tempId));
             
            onSnapshot(q, (snapshot) => {
                 const newData: Chat[] = [];
@@ -178,7 +206,15 @@ const ChatPage = () => {
                                     }
 
                                     let color
-                                    if(bubble.sender != user?.user_id.join('')){
+
+                                    console.log(user?.user_id)
+                                    let id = user?.user_id || ""
+                                    let temp = Object.values(id)
+
+                                    console.log(temp)
+                                    console.log(temp.join(''))
+
+                                    if(bubble.sender != temp.join('')){
                                         return(
                                             <div key={index} className='m-2 flex '>
                                                 <div className={`${defaultBubbleTailwind} ${receiveBackgrounColor}`}>

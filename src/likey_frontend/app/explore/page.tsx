@@ -19,21 +19,7 @@ import { updateSwipeFilter } from '../utility/filterController';
 const Page = () => {
     
     const [user, setUser] = React.useState<UserData>()
-    const [feed, setFeed]= React.useState<FeedProfile | null>({
-        "dob": "2004-03-03",
-        "height": 170,
-        "profile_picture_link": "https://th.bing.com/th/id/OIP.pV2-OydUF2440XkTv1WLTwHaEL?w=313&h=180&c=7&r=0&o=5&pid=1.7",
-        "education": 1,
-        "description": "halo",
-        "user_id": [2],
-        "gender": "Female",
-        "first_name": "Mis",
-        "last_name": "Young",
-        "religion": "Buddha",
-        "photo_link": [
-            "https://th.bing.com/th/id/OIP.pV2-OydUF2440XkTv1WLTwHaEL?w=313&h=180&c=7&r=0&o=5&pid=1.7"
-        ]
-    })
+    const [feed, setFeed]= React.useState<FeedProfile | null>()
     const [hobbies, setHobby] = React.useState<UserHobby[]>()
     const [filter, setFilter] = React.useState<Filter>()
 
@@ -49,53 +35,84 @@ const Page = () => {
 
     const generateFeed = async() => {
         console.log(user)
-        const id = user?.user_id || [4]
+        // const id = user?.user_id || [4]
+        // console.log(id)let cook = await dec(getCookie("my_principal_id")||"")
+            // console.log(cook)
+            let cook = await dec(getCookie("my_principal_id")||"")
+            // // nembak ID karena tidak bisa akses II punya ID
+            let afterParse = JSON.parse(cook||"{}")
+            console.log(afterParse)
+            // let afterParse = [1]
+            // const userData : any = await getUserData(afterParse)
+            const userDatum : any = await getUserData(afterParse)
+            // console.log(userData)
+
+            const userData = userDatum.Ok
+            console.log(userDatum)
+
+            // const userData:any = await getUserDataFromStorage()
+            console.log("DALAM NAMA TUHAN YESUS")
+            // console.log(userData.Ok)
+            
+            // setUser(userData)
+            
+        
+
+        const id = userData.user_id
         console.log(id)
-        const data : any = await getFeeds(id)
+        const data : any = await getFeeds(Object.values(id))
         console.log(data)
 
-        const index : any = await getUserData(id)
+        const index : any = userData.last_swipe_index
 
-        setFeed(data.Ok[0][index.Ok.last_swipe_index])
-        console.log(data.Ok[0])
-        setFeed(data.Ok[0][index.Ok.last_swipe_index])
+        console.log(index)
 
-        const hobbyFetch : any= await getHobby(id)
+        setFeed(data.Ok[0][index])
+        console.log("feed Data :",data.Ok[0][index])
+
+
+        const hobbyFetch : any= await getHobby(Object.values(id))
         setHobby(hobbyFetch)
     }
 
     React.useEffect(()=> {
 
         const fetchUserData = async() => {
-            // let cook = await dec(getCookie("my_principal_id")||"")
+            let cook = await dec(getCookie("my_principal_id")||"")
             // console.log(cook)
 
             // // nembak ID karena tidak bisa akses II punya ID
-            // let afterParse = JSON.parse(cook||"{}")
-            // console.log(afterParse)
-            let afterParse = [1]
-            const userData : any = await getUserData(afterParse)
+            let afterParse = JSON.parse(cook||"{}")
+            console.log(afterParse)
+            // let afterParse = [1]
+            // const userData : any = await getUserData(afterParse)
+            const userDatum : any = await getUserData(afterParse)
             // console.log(userData)
+
+            const userData = userDatum.Ok
+            console.log(userDatum)
 
             // const userData:any = await getUserDataFromStorage()
             console.log("DALAM NAMA TUHAN YESUS")
-            console.log(userData.Ok)
+            // console.log(userData.Ok)
             
-            setUser(userData.Ok)
+            setUser(userData)
+            console.log(userData)
 
-            const id = userData.Ok.user_id
+            const id = userData.user_id
             console.log(id)
-            const data : any = await getFeeds(id)
+            const data : any = await getFeeds(Object.values(id))
             console.log(data)
 
-            const index : any = await getUserData(id)
+            const index : any = userData.last_swipe_index
+
             console.log(index)
 
-            setFeed(data.Ok[0][index.Ok.last_swipe_index])
-            console.log(data.Ok[0])
-            setFeed(data.Ok[0][index.Ok.last_swipe_index])
+            setFeed(data.Ok[0][index])
+            console.log("feed Data :",data.Ok[0][index])
 
-            const hobbyFetch : any= await getHobby(id)
+
+            const hobbyFetch : any= await getHobby(Object.values(id))
             setHobby(hobbyFetch)
 
         }
@@ -122,12 +139,24 @@ const Page = () => {
 
     const handleInterest = async(isInterest : boolean) => {
         console.log(user, feed)
-        const srcUser = user?.user_id || [1]
+
+        const userData:any = await getUserDataFromStorage()
+            console.log("DALAM NAMA TUHAN YESUS")
+            // console.log(userData.Ok)
+            
+            setUser(userData)
+
+            const id = userData.user_id
+            console.log(id)
+
+        const srcUser = Object.values(id) || [1]
+
+
         const dstUser = feed?.user_id || [2]
         setFeed(null)
         console.log(Array.from(srcUser), Array.from(dstUser), isInterest);
         
-        const result : any = await addInterest(Array.from(srcUser), Array.from(dstUser), isInterest)
+        const result : any = await addInterest(srcUser, Array.from(dstUser), isInterest)
         console.log("aaaa")
         console.log(result)
 
@@ -163,7 +192,16 @@ const Page = () => {
             ["Education", { Education: { data: education } }]
           ];
 
-          const data = await updateSwipeFilter(user?.user_id || [], swipeFilters)
+          const userData:any = await getUserDataFromStorage()
+            console.log("DALAM NAMA TUHAN YESUS")
+            // console.log(userData.Ok)
+            
+            setUser(userData)
+
+            const id = userData.user_id
+            console.log(id)
+
+          const data = await updateSwipeFilter(Object.values(id) || [], swipeFilters)
 
     }
 
@@ -304,7 +342,7 @@ const Page = () => {
                                 {feed.height} cm / {feed.religion}
                             </div>
                             <div className='text-content font-bold'>
-                                {feed.education}
+                                {EDUCATIONS[feed.education]}
                             </div>
                             <div className='text-md'>
                                 {feed.description}

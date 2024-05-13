@@ -11,7 +11,7 @@ export const getHobby = async(id : number[]) => {
     return data
 }
 
-export const addInterest = async(srcId : number[], dstId : number[], isInterest : boolean) => {
+export const addInterest = async(srcId : any, dstId : number[], isInterest : boolean) => {
 
     const payload : AddInterestPayload = {
         user_id_source : srcId,
